@@ -4,124 +4,47 @@ import { useTranslations, useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { Star, TrendingUp, Truck, Shield, Zap, Heart, ShoppingBag, Eye } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useCart } from "@/components/providers/CartProvider";
 
-const PRODUCTS = [
-  {
-    id: 1,
-    name: { ar: "فستان تاي دي - رملي", en: "Tie-Dye Ribbed Dress – Sand" },
-    price: 899,
-    oldPrice: 1299,
-    image: "/products/IMG_0575.jpg",
-    badge: "NEW",
-    rating: 4.8,
-    reviews: 24,
-    colors: ["#a89272", "#5a6b5a"],
-    sizes: ["S", "M", "L", "XL"],
-  },
-  {
-    id: 2,
-    name: { ar: "فستان تريكو كيبل - بينك", en: "Cable-Knit Dress – Blush Pink" },
-    price: 1199,
-    oldPrice: 1699,
-    image: "/products/IMG_0579.jpg",
-    badge: "HOT",
-    rating: 4.9,
-    reviews: 38,
-    colors: ["#c4a0a0", "#e8d5c4"],
-    sizes: ["S", "M", "L"],
-  },
-  {
-    id: 3,
-    name: { ar: "فستان سويد - بيج", en: "Suede A-Line Dress – Beige" },
-    price: 1049,
-    oldPrice: null,
-    image: "/products/IMG_0580.jpg",
-    badge: "EXCLUSIVE",
-    rating: 5.0,
-    reviews: 12,
-    colors: ["#c4ad8c"],
-    sizes: ["S", "M", "L", "XL"],
-  },
-  {
-    id: 4,
-    name: { ar: "سويتشيرت ليوبارد ميني", en: "Leopard Minnie Sweatshirt" },
-    price: 749,
-    oldPrice: 999,
-    image: "/products/IMG_0737.jpg",
-    badge: null,
-    rating: 4.7,
-    reviews: 56,
-    colors: ["#5a4a3a", "#3a3a3a"],
-    sizes: ["M", "L", "XL", "XXL"],
-  },
-  {
-    id: 5,
-    name: { ar: "سويتشيرت هيلو كيتي - أسود", en: "Hello Kitty Sweatshirt – Washed Black" },
-    price: 699,
-    oldPrice: 899,
-    image: "/products/IMG_0744.jpg",
-    badge: "SALE",
-    rating: 4.6,
-    reviews: 41,
-    colors: ["#3d3d3d", "#f0f0f0"],
-    sizes: ["S", "M", "L", "XL"],
-  },
-  {
-    id: 6,
-    name: { ar: "سويتشيرت باريس ميني", en: "Paris Minnie Sweatshirt" },
-    price: 649,
-    oldPrice: null,
-    image: "/products/IMG_0751.jpg",
-    badge: "RAMADAN",
-    rating: 4.8,
-    reviews: 19,
-    colors: ["#e8d5c4", "#8b2252"],
-    sizes: ["M", "L", "XL"],
-  },
-  {
-    id: 7,
-    name: { ar: "طقم لاونج وير - بينك", en: "Loungewear Set – Candy Pink" },
-    price: 1399,
-    oldPrice: 1899,
-    image: "/products/IMG_0754.jpg",
-    badge: "NEW",
-    rating: 4.9,
-    reviews: 33,
-    colors: ["#f0b0c0", "#c4a0a0"],
-    sizes: ["S", "M", "L"],
-  },
-  {
-    id: 8,
-    name: { ar: "هيلو كيتي سبلاش - أبيض", en: "Hello Kitty Splash – White" },
-    price: 699,
-    oldPrice: 899,
-    image: "/products/IMG_0756.jpg",
-    badge: null,
-    rating: 4.5,
-    reviews: 28,
-    colors: ["#f0f0f0", "#4a7ab5"],
-    sizes: ["M", "L", "XL", "XXL"],
-  },
-];
+interface Product {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  price: number;
+  sale_price: number | null;
+  category: string;
+  sizes: string[];
+  colors: { name: string; hex: string }[];
+  images: string[];
+  badge: string | null;
+  stock: number;
+  rating: number;
+  reviews_count: number;
+}
 
 function ProductCard({
   product,
   locale,
   index,
   addToCartText,
+  onAddToCart,
 }: {
-  product: (typeof PRODUCTS)[0];
+  product: Product;
   locale: string;
   index: number;
   addToCartText: string;
+  onAddToCart: (product: Product) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  const name = locale === "ar" ? product.name.ar : product.name.en;
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+  const [addedFeedback, setAddedFeedback] = useState(false);
+  const name = locale === "ar" ? product.name_ar : product.name_en;
+  const discount = product.sale_price
+    ? Math.round(((product.price - product.sale_price) / product.price) * 100)
     : null;
+  const displayPrice = product.sale_price ?? product.price;
 
   const badgeStyles: Record<string, string> = {
     NEW: "bg-[var(--wide-neon)] text-black",
@@ -129,6 +52,12 @@ function ProductCard({
     RAMADAN: "bg-gradient-to-r from-amber-500 to-yellow-400 text-black",
     SALE: "bg-[var(--wide-info)] text-black",
     EXCLUSIVE: "bg-gradient-to-r from-purple-500 to-pink-500 text-white",
+  };
+
+  const handleAddToCart = () => {
+    onAddToCart(product);
+    setAddedFeedback(true);
+    setTimeout(() => setAddedFeedback(false), 1500);
   };
 
   return (
@@ -144,14 +73,14 @@ function ProductCard({
       {/* Image Container */}
       <div className="relative aspect-[3/4] overflow-hidden">
         <Image
-          src={product.image}
+          src={product.images?.[0] ?? "/products/IMG_0575.jpg"}
           alt={name}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
 
-        {/* Image Overlay - appears on hover */}
+        {/* Image Overlay */}
         <motion.div
           initial={false}
           animate={{ opacity: isHovered ? 1 : 0 }}
@@ -188,6 +117,7 @@ function ProductCard({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsLiked(!isLiked)}
+            title={locale === "ar" ? "أضف للمفضلة" : "Add to wishlist"}
             className={`flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-all ${isLiked
               ? "bg-[var(--wide-error)] text-white"
               : "bg-white/10 text-white hover:bg-white/20"
@@ -199,15 +129,20 @@ function ProductCard({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--wide-neon)] text-xs font-bold uppercase tracking-wider text-black backdrop-blur-md transition-all hover:shadow-[0_0_20px_rgba(57,255,20,0.4)]"
+            onClick={handleAddToCart}
+            className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md transition-all ${addedFeedback
+                ? "bg-green-500 text-white"
+                : "bg-[var(--wide-neon)] text-black hover:shadow-[0_0_20px_rgba(57,255,20,0.4)]"
+              }`}
           >
             <ShoppingBag className="h-3.5 w-3.5" />
-            {addToCartText}
+            {addedFeedback ? "✅" : addToCartText}
           </motion.button>
 
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
+            title={locale === "ar" ? "عرض سريع" : "Quick view"}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20"
           >
             <Eye className="h-4 w-4" />
@@ -231,7 +166,7 @@ function ProductCard({
             ))}
           </div>
           <span className="text-[10px] text-[var(--wide-text-muted)]">
-            ({product.reviews})
+            ({product.reviews_count})
           </span>
         </div>
 
@@ -242,15 +177,15 @@ function ProductCard({
 
         {/* Color Swatches */}
         <div className="flex items-center gap-1.5">
-          {product.colors.map((color, i) => (
+          {product.colors?.map((color, i) => (
             <span
               key={i}
               className="h-3.5 w-3.5 rounded-full border border-[var(--wide-border)]"
-              style={{ backgroundColor: color }}
+              style={{ backgroundColor: color.hex }}
             />
           ))}
           <span className="text-[10px] text-[var(--wide-text-muted)]">
-            +{product.sizes.length} sizes
+            +{product.sizes?.length ?? 0} {locale === "ar" ? "مقاسات" : "sizes"}
           </span>
         </div>
 
@@ -258,12 +193,12 @@ function ProductCard({
         <div className="mt-auto flex items-end justify-between pt-1">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-black text-[var(--wide-neon)]">
-              {product.price}
+              {displayPrice}
               <span className="text-xs font-medium text-[var(--wide-text-muted)]"> EGP</span>
             </span>
-            {product.oldPrice && (
+            {product.sale_price && (
               <span className="text-xs text-[var(--wide-text-muted)] line-through">
-                {product.oldPrice}
+                {product.price}
               </span>
             )}
           </div>
@@ -276,6 +211,31 @@ function ProductCard({
 export default function FeaturedProducts() {
   const t = useTranslations();
   const locale = useLocale();
+  const { addItem } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(8);
+
+      if (data) setProducts(data as Product[]);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
+
+  const handleAddToCart = (product: Product) => {
+    const defaultSize = product.sizes?.[0] ?? "M";
+    const defaultColor = product.colors?.[0]?.hex ?? null;
+    addItem(product.id, defaultSize, defaultColor ?? undefined);
+  };
 
   return (
     <section className="relative py-24">
@@ -324,18 +284,34 @@ export default function FeaturedProducts() {
           </motion.p>
         </div>
 
-        {/* Product Grid - 2 cols mobile, 3 cols tablet, 4 cols desktop */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-          {PRODUCTS.map((product, i) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              locale={locale}
-              index={i}
-              addToCartText={t("shop.addToCart")}
-            />
-          ))}
-        </div>
+        {/* Product Grid */}
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse rounded-2xl border border-[var(--wide-border)] bg-[var(--wide-card)]">
+                <div className="aspect-[3/4] bg-[var(--wide-surface)]" />
+                <div className="space-y-3 p-4">
+                  <div className="h-3 w-20 rounded bg-[var(--wide-surface)]" />
+                  <div className="h-4 w-full rounded bg-[var(--wide-surface)]" />
+                  <div className="h-5 w-16 rounded bg-[var(--wide-surface)]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+            {products.map((product, i) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                locale={locale}
+                index={i}
+                addToCartText={t("shop.addToCart")}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
+          </div>
+        )}
 
         {/* View All Button */}
         <motion.div
@@ -349,7 +325,7 @@ export default function FeaturedProducts() {
             whileTap={{ scale: 0.95 }}
             className="group flex items-center gap-3 rounded-full border border-[var(--wide-neon)] bg-transparent px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-[var(--wide-neon)] transition-all hover:bg-[var(--wide-neon)] hover:text-black"
           >
-            {locale === "ar" ? "شوف الكل" : "View All Products"}
+            {t("shop.viewAll")}
             <TrendingUp className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </motion.button>
         </motion.div>
