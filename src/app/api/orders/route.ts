@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { sendTelegramNotification, formatOrderNotification } from "@/lib/telegram";
+import { sendOrderNotification, formatOrderNotification } from "@/lib/notifications";
 
 /**
  * POST /api/orders
@@ -133,8 +133,8 @@ export async function POST(request: Request) {
         // 8. Clear cart
         await supabase.from("cart_items").delete().eq("user_id", user.id);
 
-        // 9. Send Telegram notification
-        await sendTelegramNotification(
+        // 9. Send Unified Notification (Telegram, WhatsApp, etc)
+        await sendOrderNotification(
             formatOrderNotification({
                 id: order.id,
                 customerName: fullName,
@@ -147,7 +147,8 @@ export async function POST(request: Request) {
                     size: item.size,
                     quantity: item.quantity,
                 })),
-            })
+            }),
+            ['telegram'] // Defaulting to Telegram for now until Meta API keys are active
         );
 
         // 10. Update user profile with latest shipping info

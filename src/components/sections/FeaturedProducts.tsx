@@ -7,11 +7,14 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/components/providers/CartProvider";
+import QuickViewModal from "../shop/QuickViewModal";
 
 interface Product {
   id: string;
   name_ar: string;
   name_en: string;
+  description_ar: string;
+  description_en: string;
   price: number;
   sale_price: number | null;
   category: string;
@@ -30,12 +33,14 @@ function ProductCard({
   index,
   addToCartText,
   onAddToCart,
+  onQuickView,
 }: {
   product: Product;
   locale: string;
   index: number;
   addToCartText: string;
   onAddToCart: (product: Product) => void;
+  onQuickView: (product: Product) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -131,8 +136,8 @@ function ProductCard({
             whileTap={{ scale: 0.95 }}
             onClick={handleAddToCart}
             className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md transition-all ${addedFeedback
-                ? "bg-green-500 text-white"
-                : "bg-[var(--wide-neon)] text-black hover:shadow-[0_0_20px_rgba(57,255,20,0.4)]"
+              ? "bg-green-500 text-white"
+              : "bg-[var(--wide-neon)] text-black hover:shadow-[0_0_20px_rgba(57,255,20,0.4)]"
               }`}
           >
             <ShoppingBag className="h-3.5 w-3.5" />
@@ -142,6 +147,10 @@ function ProductCard({
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
+            onClick={(e) => {
+              e.preventDefault();
+              onQuickView(product);
+            }}
             title={locale === "ar" ? "عرض سريع" : "Quick view"}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20"
           >
@@ -214,6 +223,7 @@ export default function FeaturedProducts() {
   const { addItem } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -308,6 +318,7 @@ export default function FeaturedProducts() {
                 index={i}
                 addToCartText={t("shop.addToCart")}
                 onAddToCart={handleAddToCart}
+                onQuickView={setQuickViewProduct}
               />
             ))}
           </div>
@@ -359,6 +370,13 @@ export default function FeaturedProducts() {
           ))}
         </motion.div>
       </div>
+
+      {/* Quick View Modal */}
+      <QuickViewModal
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+        product={quickViewProduct}
+      />
     </section>
   );
 }

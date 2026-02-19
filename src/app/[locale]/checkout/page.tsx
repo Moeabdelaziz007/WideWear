@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Package, MapPin, CreditCard, Minus, Plus, Trash2, Loader2, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { useCart } from "@/components/providers/CartProvider";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/layout/Navbar";
@@ -23,6 +24,10 @@ export default function CheckoutPage() {
     const [step, setStep] = useState<Step>(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+    // Fallback sitekey for testing if env var not set
+    const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
 
     // Shipping form state
     const [fullName, setFullName] = useState("");
@@ -31,6 +36,7 @@ export default function CheckoutPage() {
     const [address2, setAddress2] = useState("");
     const [city, setCity] = useState("Cairo");
     const [notes, setNotes] = useState("");
+    const [paymentMethod, setPaymentMethod] = useState("cod"); // 'cod' or 'fawry'
 
     // Redirect if not logged in
     useEffect(() => {
@@ -68,6 +74,11 @@ export default function CheckoutPage() {
         }).format(price);
 
     const handlePlaceOrder = async () => {
+        if (!turnstileToken) {
+            setError(isRTL ? "يرجى التحقق من أمان الاتصال أولاً." : "Please verify security check first.");
+            return;
+        }
+
         setLoading(true);
         setError(null);
         try {
@@ -81,12 +92,19 @@ export default function CheckoutPage() {
                     address2,
                     city,
                     notes,
-                    paymentMethod: "cod",
+                    paymentMethod, // Dynamic now
                 }),
             });
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
+
+            // If Fawry, redirect to Fawry Sandbox (Or wait for backend to return URL in next step)
+            if (paymentMethod === "fawry") {
+                // Placeholder redirect: In reality the API /orders would return a checkout URL
+                // We will implement the actual charge request generation in the next step
+                console.log("Redirecting to Fawry with Order ID:", data.orderId);
+            }
 
             router.push(`/${locale}/checkout/success?orderId=${data.orderId}`);
         } catch (err) {
@@ -261,10 +279,68 @@ export default function CheckoutPage() {
                                                 <CreditCard className="h-4 w-4 text-[var(--wide-neon)]" />
                                                 {t("paymentMethod")}
                                             </h3>
-                                            <div className="flex items-center gap-3 rounded-lg border border-[var(--wide-neon)]/30 bg-[var(--wide-neon)]/5 p-4">
-                                                <CheckCircle2 className="h-5 w-5 text-[var(--wide-neon)]" />
-                                                <span className="text-sm font-medium text-[var(--wide-text-primary)]">{t("cod")}</span>
+
+                                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                {/* Cash on Delivery */}
+                                                <button
+                                                    onClick={() => setPaymentMethod("cod")}
+                                                    className={`group relative flex items-center gap-4 rounded-xl border p-4 text-left transition-all ${paymentMethod === "cod"
+                                                        ? "border-[var(--wide-neon)] bg-[var(--wide-neon)]/5 ring-1 ring-[var(--wide-neon)]"
+                                                        : "border-[var(--wide-border)] bg-[var(--wide-bg-primary)] hover:border-[var(--wide-text-muted)]"
+                                                        }`}
+                                                >
+                                                    <div className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full border transition-all ${paymentMethod === "cod" ? "border-[var(--wide-neon)]" : "border-[var(--wide-text-muted)]"}`}>
+                                                        {paymentMethod === "cod" && <div className="h-2.5 w-2.5 rounded-full bg-[var(--wide-neon)]" />}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`font-semibold transition-colors ${paymentMethod === "cod" ? "text-[var(--wide-text-primary)]" : "text-[var(--wide-text-muted)]"}`}>
+                                                                {t("cod")}
+                                                            </span>
+                                                        </div>
+                                                        <p className="mt-1 text-xs text-[var(--wide-text-secondary)]">
+                                                            {isRTL ? "الدفع نقداً عند استلام الطلب" : "Pay with cash upon delivery"}
+                                                        </p>
+                                                    </div>
+                                                </button>
+
+                                                {/* Fawry Pay */}
+                                                <button
+                                                    onClick={() => setPaymentMethod("fawry")}
+                                                    className={`group relative flex items-center gap-4 rounded-xl border p-4 text-left transition-all ${paymentMethod === "fawry"
+                                                        ? "border-[#FDBD12] bg-[#FDBD12]/5 ring-1 ring-[#FDBD12]" // Fawry Yellow
+                                                        : "border-[var(--wide-border)] bg-[var(--wide-bg-primary)] hover:border-[var(--wide-text-muted)]"
+                                                        }`}
+                                                >
+                                                    <div className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full border transition-all ${paymentMethod === "fawry" ? "border-[#FDBD12]" : "border-[var(--wide-text-muted)]"}`}>
+                                                        {paymentMethod === "fawry" && <div className="h-2.5 w-2.5 rounded-full bg-[#FDBD12]" />}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`font-semibold transition-colors ${paymentMethod === "fawry" ? "text-[var(--wide-text-primary)]" : "text-[var(--wide-text-muted)]"}`}>
+                                                                {isRTL ? "فوري باي" : "Fawry Pay"}
+                                                            </span>
+                                                            <div className="flex rounded bg-white px-1 py-0.5 shadow-sm">
+                                                                {/* Simple Fawry text logo simulation since we don't have SVG */}
+                                                                <span className="text-[10px] font-black tracking-tight text-[#004A8F]">fawry</span><span className="text-[10px] font-black tracking-tight text-[#FDBD12]">Pay</span>
+                                                            </div>
+                                                        </div>
+                                                        <p className="mt-1 text-xs text-[var(--wide-text-secondary)]">
+                                                            {isRTL ? "دفع آمن بالبطاقة أو المحافظ أو امان" : "Secure card, wallet, or kiosk payments"}
+                                                        </p>
+                                                    </div>
+                                                </button>
                                             </div>
+                                        </div>
+
+                                        {/* Turnstile Security Check */}
+                                        <div className="flex justify-center py-4">
+                                            <Turnstile
+                                                siteKey={turnstileSiteKey}
+                                                onSuccess={(token) => setTurnstileToken(token)}
+                                                onError={() => setError("Security check failed. Please refresh.")}
+                                                onExpire={() => setTurnstileToken(null)}
+                                            />
                                         </div>
 
                                         <div className="mt-6 flex gap-3">

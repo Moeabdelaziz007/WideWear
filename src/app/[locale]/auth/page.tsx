@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import WideWearLogo from "@/components/brand/WideWearLogo";
 import { createClient } from "@/lib/supabase/client";
 
@@ -24,10 +25,19 @@ export default function AuthPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
     const isRTL = locale === "ar";
 
+    // Fallback sitekey for testing if env var not set
+    const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
+
     const handleLogin = async () => {
+        if (!turnstileToken) {
+            setError(isRTL ? "يرجى التحقق من أمان الاتصال أولاً." : "Please verify security check first.");
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -46,6 +56,11 @@ export default function AuthPage() {
     };
 
     const handleSignup = async () => {
+        if (!turnstileToken) {
+            setError(isRTL ? "يرجى التحقق من أمان الاتصال أولاً." : "Please verify security check first.");
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -257,6 +272,16 @@ export default function AuthPage() {
                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Turnstile Security Check */}
+                        <div className="flex justify-center py-2">
+                            <Turnstile
+                                siteKey={turnstileSiteKey}
+                                onSuccess={(token) => setTurnstileToken(token)}
+                                onError={() => setError("Security check failed. Please refresh.")}
+                                onExpire={() => setTurnstileToken(null)}
+                            />
                         </div>
 
                         {/* Submit Button */}

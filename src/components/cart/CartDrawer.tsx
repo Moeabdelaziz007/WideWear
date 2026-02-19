@@ -17,6 +17,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     const isRTL = locale === "ar";
     const { items, count, total, removeItem, updateQuantity, user } = useCart();
 
+    const FREE_SHIPPING_THRESHOLD = 2000;
+    const isFreeShipping = total >= FREE_SHIPPING_THRESHOLD;
+    const amountNeeded = FREE_SHIPPING_THRESHOLD - total;
+    const progressPercentage = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
+
     const formatPrice = (price: number) =>
         new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-EG", {
             style: "currency",
@@ -189,13 +194,37 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         {/* Footer */}
                         {items.length > 0 && (
                             <div className="border-t border-[var(--wide-border)] p-5">
+                                {/* Free Shipping Progress */}
+                                <div className="mb-4">
+                                    <div className="mb-2 flex items-center justify-between text-xs font-semibold">
+                                        <span className={isFreeShipping ? "text-[var(--wide-neon)]" : "text-[var(--wide-text-primary)]"}>
+                                            {isFreeShipping
+                                                ? (isRTL ? "مؤهل للشحن المجاني! 🚚" : "You got Free Shipping! 🚚")
+                                                : (isRTL
+                                                    ? `أضف ${formatPrice(amountNeeded)} للشحن المجاني`
+                                                    : `Add ${formatPrice(amountNeeded)} for Free Shipping`)
+                                            }
+                                        </span>
+                                    </div>
+                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--wide-surface)]">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${progressPercentage}%` }}
+                                            transition={{ duration: 0.5, ease: "easeOut" }}
+                                            className={`h-full ${isFreeShipping ? "bg-[var(--wide-neon)]" : "bg-[var(--wide-text-primary)]"}`}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="mb-2 flex items-center justify-between text-sm text-[var(--wide-text-muted)]">
                                     <span>{t("subtotal")}</span>
                                     <span>{formatPrice(total)}</span>
                                 </div>
                                 <div className="mb-4 flex items-center justify-between text-sm">
                                     <span className="text-[var(--wide-text-muted)]">{t("shipping")}</span>
-                                    <span className="font-medium text-[var(--wide-neon)]">{t("freeShipping")}</span>
+                                    <span className="font-medium text-[var(--wide-neon)]">
+                                        {isFreeShipping ? t("freeShipping") : (isRTL ? "يُحسب عند الدفع" : "Calculated at checkout")}
+                                    </span>
                                 </div>
                                 <div className="mb-4 flex items-center justify-between border-t border-[var(--wide-border)] pt-3">
                                     <span className="text-base font-bold text-[var(--wide-text-primary)]">
