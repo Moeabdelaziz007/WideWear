@@ -8,6 +8,7 @@
 [![React](https://img.shields.io/badge/React-19.2.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.x-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Auth%20%2B%20DB-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 
 <!-- Badges Row 2: Tools & Status -->
 [![Framer Motion](https://img.shields.io/badge/Framer_Motion-12.x-FF0055?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/)
@@ -58,8 +59,10 @@
 - 🎨 **Dark Cyberpunk UI** — Neon green accents (#39FF14), glassmorphism, animated particles
 - 🌍 **Full RTL/LTR Support** — Seamless Arabic ↔ English switching with `next-intl`
 - ⚡ **Bleeding-Edge Stack** — Next.js 16 + React 19 + Tailwind 4 + Turbopack
+- 🔐 **Supabase Auth** — Email/password + Google OAuth + session management
+- 🛒 **Full E-Commerce** — Cart system, 3-step checkout, order tracking with Realtime
 - 📱 **Mobile-First** — Responsive design optimized for all screen sizes
-- 🤖 **Telegram Integration** — Direct customer support via Telegram bot
+- 🤖 **Telegram Integration** — Customer support bot + admin order notifications
 - 🔍 **SEO Optimized** — Bilingual meta tags, OpenGraph, Twitter Cards
 
 ---
@@ -73,8 +76,10 @@
 - 🎨 **تصميم سايبربانك داكن** — ألوان نيون خضراء، تأثيرات زجاجية، جزيئات متحركة
 - 🌍 **دعم كامل للعربي** — تبديل سلس بين العربي RTL والإنجليزي LTR
 - ⚡ **أحدث التقنيات** — Next.js 16 + React 19 + Tailwind 4
+- 🔐 **مصادقة Supabase** — تسجيل بالإيميل + Google OAuth + إدارة الجلسات
+- 🛒 **تجارة إلكترونية كاملة** — سلة تسوق، عملية شراء 3 خطوات، تتبع الطلبات لحظياً
 - 📱 **تصميم Mobile-First** — متجاوب مع كل أحجام الشاشات
-- 🤖 **تكامل تليجرام** — دعم مباشر للعملاء عبر بوت تليجرام
+- 🤖 **تكامل تليجرام** — بوت دعم العملاء + إشعارات الأدمن بالطلبات الجديدة
 - 📍 **موقعنا** — مدينة العبور & جولف سيتي مول
 
 ---
@@ -90,6 +95,7 @@
 | 📘 **Language** | TypeScript | 5.x | Type safety |
 | 🎨 **Styling** | Tailwind CSS | 4.x | Utility-first CSS |
 | 🎬 **Animations** | Framer Motion | 12.x | Fluid UI animations |
+| 🔐 **Backend** | Supabase | SSR | Auth, Database, Realtime |
 | 🌍 **i18n** | next-intl | 4.8.3 | AR/EN internationalization |
 | 🧩 **UI System** | shadcn/ui | new-york | Design components |
 | 🔧 **Icons** | Lucide React | 0.574 | SVG icon system |
@@ -106,37 +112,41 @@
 graph TB
     subgraph Client["🖥️ Client Layer"]
         direction LR
-        Navbar["📍 Navbar<br/><small>SVG Logo + RTL Nav</small>"]
+        Navbar["📍 Navbar<br/><small>SVG Logo + Cart Badge + Auth</small>"]
         Hero["🎬 HeroSection<br/><small>Image Slideshow + Particles</small>"]
-        Promo["📢 PromoMarquee<br/><small>Infinite Scroll Banner</small>"]
-        Products["🛍️ FeaturedProducts<br/><small>8 Cards + Hover Effects</small>"]
-        Collections["🎨 CollectionsShowcase<br/><small>Bento Grid Layout</small>"]
-        Footer["📋 Footer<br/><small>Telegram + Social Links</small>"]
+        Products["🛍️ FeaturedProducts<br/><small>Supabase Fetch + AddToCart</small>"]
+        CartDrawer["🛒 CartDrawer<br/><small>Slide-out + RTL + Qty Controls</small>"]
+        Checkout["💳 Checkout<br/><small>3-Step: Review → Ship → Confirm</small>"]
+        Orders["📦 Orders<br/><small>List + Detail + Realtime Status</small>"]
+        Profile["👤 Profile<br/><small>Editable Name/Phone/Address</small>"]
     end
 
     subgraph Server["⚙️ Server Layer"]
-        RootLayout["layout.tsx<br/><small>Metadata + SEO</small>"]
-        LocaleLayout["[locale]/layout.tsx<br/><small>html/body + IntlProvider</small>"]
-        Middleware["middleware.ts<br/><small>Locale Detection + Routing</small>"]
+        Middleware["middleware.ts<br/><small>Auth + i18n Routing</small>"]
+        OrderAPI["api/orders<br/><small>Validation + Stock + Telegram</small>"]
+        AuthCallback["auth/callback<br/><small>OAuth Code Exchange</small>"]
+    end
+
+    subgraph Supabase["🔐 Supabase Layer"]
+        Auth["Auth<br/><small>Email + Google OAuth</small>"]
+        DB["Database<br/><small>Products, Cart, Orders, Profiles</small>"]
+        Realtime["Realtime<br/><small>Live Order Status Updates</small>"]
+        RLS["Row Level Security<br/><small>Per-User Data Isolation</small>"]
     end
 
     subgraph i18n["🌍 i18n Layer"]
         Routing["routing.ts<br/><small>ar (default) / en</small>"]
-        Messages["messages/<br/><small>ar.json + en.json</small>"]
+        Messages["messages/<br/><small>ar.json + en.json (120+ keys)</small>"]
     end
 
-    subgraph Design["🎨 Design System"]
-        CSS["globals.css<br/><small>CSS Variables + Tokens</small>"]
-        Logo["WideWearLogo.tsx<br/><small>SVG + Neon Glow</small>"]
-    end
-
-    Middleware --> LocaleLayout
-    LocaleLayout --> Client
+    Middleware --> Client
+    Client --> OrderAPI
+    OrderAPI --> DB
+    Client --> Auth
+    Client --> Realtime
     Routing --> Middleware
-    Messages --> LocaleLayout
-    CSS --> Client
-    Logo --> Navbar
-    Logo --> Footer
+    Messages --> Client
+    RLS --> DB
 ```
 
 ---
@@ -152,32 +162,74 @@ graph TB
 - Neon scan-line animation effect
 - Shimmer effect on CTA buttons
 - Stats row (Collections, Clients, Delivery)
-- Responsive slide indicators
 
 </details>
 
 <details>
-<summary><strong>🛍️ Product Cards</strong></summary>
+<summary><strong>🔐 Authentication System</strong></summary>
 
-- Hover-activated image overlay with action buttons
-- Wishlist (heart) toggle with animation
-- Quick-view and add-to-cart floating buttons
-- Color swatches and available sizes
-- Star rating system with review counts
-- Discount badges (NEW, HOT, SALE, RAMADAN, EXCLUSIVE)
-- Price display with strikethrough for sales
+- Email/password sign up and sign in
+- Google OAuth social login
+- Supabase session management with cookie-based SSR
+- Protected routes (checkout, orders, profile)
+- Middleware-level auth token refresh
+- Auto-redirect for unauthenticated users
 
 </details>
 
 <details>
-<summary><strong>🎨 Brand Identity</strong></summary>
+<summary><strong>🛒 Shopping Cart</strong></summary>
 
-- Custom SVG logo with neon glow filter & gradient fill
-- Orbital ring animation with orbiting dot
-- 4 sizes (sm, md, lg, xl) and 2 variants (full, icon)
-- "Cairo Cyberpunk" dark theme with #39FF14 neon accent
-- Glassmorphism navbar with backdrop blur
-- Custom scrollbar styling
+- `CartProvider` — React Context with Supabase sync for logged-in users
+- `localStorage` fallback for guest users
+- Automatic guest-to-user cart migration on login
+- Slide-out `CartDrawer` with RTL/LTR support
+- Live cart count badge in Navbar
+- Quantity controls and item removal
+- EGP currency formatting (Arabic/English)
+
+</details>
+
+<details>
+<summary><strong>💳 Checkout Flow</strong></summary>
+
+- 3-step checkout: Cart Review → Shipping Info → Confirm Order
+- Shipping form pre-filled from user profile
+- Server-side total calculation (prevents price manipulation)
+- Stock validation before order creation
+- Cash on Delivery (COD) payment
+- Animated step transitions with Framer Motion
+
+</details>
+
+<details>
+<summary><strong>📦 Order Management</strong></summary>
+
+- Orders list page with status badges (pending, confirmed, shipped, delivered)
+- Order detail page with animated status timeline
+- Supabase Realtime subscription for live status updates
+- Item list with images, sizes, and quantities
+- Shipping address and payment method display
+
+</details>
+
+<details>
+<summary><strong>👤 User Profile</strong></summary>
+
+- Editable profile: full name, phone, address, city
+- Profile data pre-fills checkout shipping form
+- Quick link to orders page
+- Sign-out functionality
+
+</details>
+
+<details>
+<summary><strong>🤖 Telegram Integration</strong></summary>
+
+- Floating Telegram button for customer support
+- Admin order notifications via Bot API
+- HTML-formatted order details (items, total, address)
+- Graceful handling when credentials are missing
 
 </details>
 
@@ -187,18 +239,8 @@ graph TB
 - Full Arabic (RTL) and English (LTR) support
 - Automatic locale detection via middleware
 - Dynamic `lang` and `dir` HTML attributes
-- 50+ translation keys across 5 namespaces
+- 120+ translation keys across 7 namespaces
 - Font-family switching: Noto Sans Arabic / Inter
-
-</details>
-
-<details>
-<summary><strong>🤖 Telegram Integration</strong></summary>
-
-- Floating Telegram button (blue gradient)
-- Footer contact link and social icon
-- Bot token secured in environment variables
-- Ready for webhook-based bot responses
 
 </details>
 
@@ -249,46 +291,62 @@ Open [http://localhost:3000](http://localhost:3000) to see the result.
 
 ```
 WideWear/
-├── .github/
-│   ├── workflows/
-│   │   ├── ci.yml              # Lint + TypeCheck + Build
-│   │   ├── lighthouse.yml      # Performance auditing
-│   │   └── codeql.yml          # Security scanning
-│   └── dependabot.yml          # Dependency updates
 ├── public/
-│   └── products/               # 14 product images
+│   └── products/               # Product images
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx          # Root layout (metadata + SEO)
 │   │   ├── globals.css         # Design system tokens
+│   │   ├── api/
+│   │   │   └── orders/
+│   │   │       └── route.ts    # Server-side order creation API
+│   │   ├── auth/
+│   │   │   └── callback/
+│   │   │       └── route.ts    # OAuth callback handler
 │   │   └── [locale]/
-│   │       ├── layout.tsx      # Locale layout (html/body + i18n)
-│   │       └── page.tsx        # Homepage composition
+│   │       ├── layout.tsx      # Locale layout (CartProvider + i18n)
+│   │       ├── page.tsx        # Homepage
+│   │       ├── auth/page.tsx   # Login / signup
+│   │       ├── checkout/
+│   │       │   ├── page.tsx    # 3-step checkout
+│   │       │   └── success/page.tsx # Order confirmation
+│   │       ├── orders/
+│   │       │   ├── page.tsx    # Orders list
+│   │       │   └── [id]/page.tsx # Order detail + Realtime
+│   │       └── profile/page.tsx # User profile
 │   ├── components/
 │   │   ├── brand/
 │   │   │   └── WideWearLogo.tsx    # SVG logo component
+│   │   ├── cart/
+│   │   │   └── CartDrawer.tsx      # Slide-out cart drawer
 │   │   ├── layout/
-│   │   │   ├── Navbar.tsx          # Glass navbar + mobile menu
+│   │   │   ├── Navbar.tsx          # Glass navbar + cart badge
 │   │   │   └── Footer.tsx          # Contact + social links
+│   │   ├── providers/
+│   │   │   └── CartProvider.tsx     # Cart context (Supabase + localStorage)
 │   │   └── sections/
 │   │       ├── HeroSection.tsx     # Image slideshow + particles
 │   │       ├── PromoMarquee.tsx    # Infinite scroll banner
-│   │       ├── FeaturedProducts.tsx # Product grid (8 cards)
+│   │       ├── FeaturedProducts.tsx # Supabase product grid
 │   │       └── CollectionsShowcase.tsx # Bento collection grid
 │   ├── i18n/
 │   │   ├── routing.ts           # Locale config (ar/en)
 │   │   ├── request.ts           # Server-side locale resolver
 │   │   └── messages/
-│   │       ├── ar.json          # Arabic translations
-│   │       └── en.json          # English translations
+│   │       ├── ar.json          # Arabic translations (120+ keys)
+│   │       └── en.json          # English translations (120+ keys)
 │   ├── lib/
-│   │   └── utils.ts             # cn() utility (clsx + tailwind-merge)
-│   └── middleware.ts            # next-intl locale middleware
+│   │   ├── utils.ts             # cn() utility (clsx + tailwind-merge)
+│   │   ├── telegram.ts          # Telegram Bot API notification helper
+│   │   └── supabase/
+│   │       ├── client.ts        # Browser Supabase client
+│   │       ├── server.ts        # Server Supabase client
+│   │       └── middleware.ts    # Session refresh middleware
+│   └── middleware.ts            # Auth + i18n middleware
+├── supabase/
+│   └── migrations/
+│       └── 20260219_init_schema.sql  # Database schema + RLS
 ├── next.config.ts               # Next.js + next-intl plugin
-├── tsconfig.json                # TypeScript config (strict)
-├── eslint.config.mjs            # ESLint 9 flat config
-├── postcss.config.mjs           # Tailwind CSS 4 PostCSS
-├── components.json              # shadcn/ui configuration
 └── package.json                 # Dependencies & scripts
 ```
 
@@ -299,15 +357,23 @@ WideWear/
 Create a `.env.local` file in the project root:
 
 ```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+
 # Telegram Bot Configuration
 TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_ADMIN_CHAT_ID=your_admin_chat_id
 NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=WideWear_Bot
 ```
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `TELEGRAM_BOT_TOKEN` | Server-only | Bot token from @BotFather |
-| `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` | Client-safe | Bot username for `t.me/` links |
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anonymous key |
+| `TELEGRAM_BOT_TOKEN` | ⚙️ | Bot token from @BotFather (for order notifications) |
+| `TELEGRAM_ADMIN_CHAT_ID` | ⚙️ | Admin chat ID for order alerts |
+| `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` | ⚙️ | Bot username for `t.me/` links |
 
 > ⚠️ **Security Note:** Never commit `.env.local` to version control. It's already in `.gitignore`.
 

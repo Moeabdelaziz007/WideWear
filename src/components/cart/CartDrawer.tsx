@@ -61,6 +61,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 onClick={onClose}
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
+                                title={isRTL ? "إغلاق" : "Close"}
                                 className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-muted)] transition-colors hover:text-[var(--wide-neon)]"
                             >
                                 <X className="h-5 w-5" />
@@ -144,6 +145,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                                 onClick={() =>
                                                                     updateQuantity(item.id, item.quantity - 1)
                                                                 }
+                                                                title={isRTL ? "تقليل الكمية" : "Decrease quantity"}
                                                                 className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--wide-surface)] text-[var(--wide-text-muted)] transition-colors hover:text-[var(--wide-neon)]"
                                                             >
                                                                 <Minus className="h-3 w-3" />
@@ -155,6 +157,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                                 onClick={() =>
                                                                     updateQuantity(item.id, item.quantity + 1)
                                                                 }
+                                                                title={isRTL ? "زيادة الكمية" : "Increase quantity"}
                                                                 className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--wide-surface)] text-[var(--wide-text-muted)] transition-colors hover:text-[var(--wide-neon)]"
                                                             >
                                                                 <Plus className="h-3 w-3" />
@@ -168,6 +171,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                             </span>
                                                             <button
                                                                 onClick={() => removeItem(item.id)}
+                                                                title={isRTL ? "حذف" : "Remove"}
                                                                 className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--wide-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-400"
                                                             >
                                                                 <Trash2 className="h-3.5 w-3.5" />

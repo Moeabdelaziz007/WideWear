@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { motion } from "framer-motion";
@@ -15,7 +15,7 @@ export default function ProfilePage() {
     const router = useRouter();
     const isRTL = locale === "ar";
     const { user } = useCart();
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -42,7 +42,7 @@ export default function ProfilePage() {
             setLoading(false);
         };
         fetchProfile();
-    }, [user, router, locale, supabase]);
+    }, [user, router, locale, supabase]); // supabase is now stable via useMemo
 
     const handleSave = async () => {
         if (!user) return;
@@ -91,20 +91,20 @@ export default function ProfilePage() {
                             {/* Form */}
                             <div className="space-y-4 rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-secondary)] p-6">
                                 <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{isRTL ? "الاسم بالكامل" : "Full Name"}</label>
-                                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                    <label htmlFor="profile-fullname" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{isRTL ? "الاسم بالكامل" : "Full Name"}</label>
+                                    <input id="profile-fullname" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                 </div>
                                 <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{isRTL ? "رقم الموبايل" : "Phone"}</label>
-                                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01XXXXXXXXX" className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                    <label htmlFor="profile-phone" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{isRTL ? "رقم الموبايل" : "Phone"}</label>
+                                    <input id="profile-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01XXXXXXXXX" className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                 </div>
                                 <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{isRTL ? "العنوان" : "Address"}</label>
-                                    <input type="text" value={address1} onChange={(e) => setAddress1(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                    <label htmlFor="profile-address" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{isRTL ? "العنوان" : "Address"}</label>
+                                    <input id="profile-address" type="text" value={address1} onChange={(e) => setAddress1(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                 </div>
                                 <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{isRTL ? "المدينة" : "City"}</label>
-                                    <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                    <label htmlFor="profile-city" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{isRTL ? "المدينة" : "City"}</label>
+                                    <input id="profile-city" type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                 </div>
 
                                 <button onClick={handleSave} disabled={saving} className={`w-full rounded-xl py-3.5 text-sm font-bold transition-all ${saved ? "bg-green-500 text-white" : "bg-[var(--wide-neon)] text-black"}`}>

@@ -133,8 +133,8 @@ export default function CheckoutPage() {
                         {steps.map(({ num, label, icon: Icon }, i) => (
                             <div key={num} className="flex items-center gap-2">
                                 <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all ${step >= num
-                                        ? "bg-[var(--wide-neon)] text-black"
-                                        : "bg-[var(--wide-surface)] text-[var(--wide-text-muted)]"
+                                    ? "bg-[var(--wide-neon)] text-black"
+                                    : "bg-[var(--wide-surface)] text-[var(--wide-text-muted)]"
                                     }`}>
                                     <Icon className="h-4 w-4" />
                                     <span className="hidden sm:inline">{label}</span>
@@ -206,28 +206,28 @@ export default function CheckoutPage() {
                                     <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                                         <div className="space-y-4 rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-secondary)] p-6">
                                             <div>
-                                                <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("fullName")} *</label>
-                                                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <label htmlFor="checkout-fullname" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("fullName")} *</label>
+                                                <input id="checkout-fullname" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                             </div>
                                             <div>
-                                                <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("phone")} *</label>
-                                                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01XXXXXXXXX" required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <label htmlFor="checkout-phone" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("phone")} *</label>
+                                                <input id="checkout-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01XXXXXXXXX" required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                             </div>
                                             <div>
-                                                <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("address1")} *</label>
-                                                <input type="text" value={address1} onChange={(e) => setAddress1(e.target.value)} required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <label htmlFor="checkout-addr1" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("address1")} *</label>
+                                                <input id="checkout-addr1" type="text" value={address1} onChange={(e) => setAddress1(e.target.value)} required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                             </div>
                                             <div>
-                                                <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("address2")}</label>
-                                                <input type="text" value={address2} onChange={(e) => setAddress2(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <label htmlFor="checkout-addr2" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("address2")}</label>
+                                                <input id="checkout-addr2" type="text" value={address2} onChange={(e) => setAddress2(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                             </div>
                                             <div>
-                                                <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("city")}</label>
-                                                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <label htmlFor="checkout-city" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("city")}</label>
+                                                <input id="checkout-city" type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                             </div>
                                             <div>
-                                                <label className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("notes")}</label>
-                                                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <label htmlFor="checkout-notes" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("notes")}</label>
+                                                <textarea id="checkout-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                             </div>
                                         </div>
                                         <div className="mt-6 flex gap-3">

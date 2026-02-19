@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -41,10 +41,11 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 // ─── Provider ───────────────────────────────────────────
 export function CartProvider({ children }: { children: React.ReactNode }) {
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
     const [user, setUser] = useState<User | null>(null);
     const [items, setItems] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const hasFetched = useRef(false);
 
     // ── Auth listener ──
     useEffect(() => {
@@ -94,8 +95,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }, [user, supabase]);
 
     useEffect(() => {
-        fetchCart();
-    }, [fetchCart]);
+        // Avoid double-fetch due to strict mode by using a ref guard
+        if (!hasFetched.current || user !== undefined) {
+            hasFetched.current = true;
+            fetchCart();
+        }
+    }, [fetchCart, user]);
 
     // ── Sync guest cart to DB on login ──
     useEffect(() => {
