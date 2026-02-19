@@ -1,0 +1,50 @@
+{
+    "brand": {
+        "name": "WIDE Wear",
+        "tagline": "Elevate Your Style ✨",
+        "since": "Since 1975"
+    },
+    "nav": {
+        "home": "Home",
+        "shop": "Shop",
+        "collections": "Collections",
+        "about": "About",
+        "contact": "Contact"
+    },
+    "hero": {
+        "headline": "The Drop Has Arrived",
+        "subheadline": "Zero Friction. Maximum Style.",
+        "cta": "Enter The System",
+        "explore": "Explore Collection"
+    },
+    "shop": {
+        "addToCart": "Add to Cart",
+        "buyNow": "Buy Now",
+        "outOfStock": "Out of Stock",
+        "onlyLeft": "Only {count} left",
+        "freeShipping": "Free Shipping in Cairo",
+        "sizeGuide": "Size Guide",
+        "filters": "Filters",
+        "sortBy": "Sort By",
+        "price": "Price",
+        "newArrivals": "New Arrivals",
+        "bestSellers": "Best Sellers"
+    },
+    "cart": {
+        "title": "The Vault",
+        "empty": "Your vault is empty",
+        "checkout": "Checkout",
+        "total": "Total",
+        "continueShopping": "Continue Shopping"
+    },
+    "promo": {
+        "buy2get1": "Buy 2, Get 1 FREE",
+        "ramadan": "Ramadan Collection 2026",
+        "freeDelivery": "Free Delivery in Cairo"
+    },
+    "footer": {
+        "followUs": "Follow Us",
+        "contactUs": "Contact Us",
+        "rights": "All rights reserved"
+    }
+}

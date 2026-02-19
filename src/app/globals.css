@@ -1,26 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+/* ===== WideWear 2.0 Design System ===== */
+/* Cairo Cyberpunk meets Luxury Utility    */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core Brand Colors */
+  --wide-black: #0a0a0a;
+  --wide-dark: #111111;
+  --wide-surface: #1a1a1a;
+  --wide-card: #222222;
+  --wide-border: #2a2a2a;
+
+  /* Neon Accent */
+  --wide-neon: #39ff14;
+  --wide-neon-dim: #2ecc0f;
+  --wide-neon-glow: rgba(57, 255, 20, 0.15);
+  --wide-neon-glow-strong: rgba(57, 255, 20, 0.3);
+
+  /* Text Hierarchy */
+  --wide-text-primary: #f5f5f5;
+  --wide-text-secondary: #a0a0a0;
+  --wide-text-muted: #666666;
+
+  /* Semantic Colors */
+  --wide-success: #39ff14;
+  --wide-warning: #f7b928;
+  --wide-error: #ff3b5c;
+  --wide-info: #54c7ec;
+
+  /* Spacing */
+  --wide-radius: 12px;
+  --wide-radius-sm: 8px;
+  --wide-radius-lg: 16px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ===== Global Reset & Base ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--wide-black);
+  color: var(--wide-text-primary);
+  font-family: "Inter", "Noto Sans Arabic", system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== RTL Support ===== */
+[dir="rtl"] body {
+  font-family: "Noto Sans Arabic", "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ===== Selection ===== */
+::selection {
+  background: var(--wide-neon-glow-strong);
+  color: var(--wide-text-primary);
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--wide-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--wide-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--wide-neon-dim);
+}
+
+/* ===== Typography ===== */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* ===== Utility Classes ===== */
+.neon-text {
+  color: var(--wide-neon);
+  text-shadow: 0 0 10px var(--wide-neon-glow),
+    0 0 40px var(--wide-neon-glow);
+}
+
+.neon-border {
+  border: 1px solid var(--wide-neon);
+  box-shadow: 0 0 10px var(--wide-neon-glow),
+    inset 0 0 10px var(--wide-neon-glow);
+}
+
+.neon-glow {
+  box-shadow: 0 0 20px var(--wide-neon-glow),
+    0 0 60px var(--wide-neon-glow);
+}
+
+.glass {
+  background: rgba(26, 26, 26, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--wide-border);
+}
+
+.gradient-neon {
+  background: linear-gradient(135deg, var(--wide-neon) 0%, #00ff88 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== Animations ===== */
+@keyframes pulse-neon {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+
+  20% {
+    transform: translate(-2px, 2px);
+  }
+
+  40% {
+    transform: translate(-2px, -2px);
+  }
+
+  60% {
+    transform: translate(2px, 2px);
+  }
+
+  80% {
+    transform: translate(2px, -2px);
+  }
+
+  100% {
+    transform: translate(0);
+  }
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glitch {
+  animation: glitch 0.3s ease-in-out;
 }
