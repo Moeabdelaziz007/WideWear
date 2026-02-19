@@ -21,6 +21,8 @@
 
 **🇪🇬 Cairo's Premium Streetwear & Modest Fashion — Since 1975**
 
+*Built by agents for agents*
+
 [🌐 Live Demo](https://widewear.vercel.app) · [🐛 Report Bug](https://github.com/Moeabdelaziz007/WideWear/issues) · [💡 Request Feature](https://github.com/Moeabdelaziz007/WideWear/issues)
 
 ---
@@ -446,6 +448,7 @@ Contributions are welcome! Here's how:
 **Built with 💚 in Cairo, Egypt 🇪🇬**
 
 *Powered by [Antigravity](https://github.com/google-deepmind) ⚡*
+*Built by agents for agents 🤖*
 
 </div>
 
