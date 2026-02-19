@@ -96,6 +96,8 @@
 | 🎨 **Styling** | Tailwind CSS | 4.x | Utility-first CSS |
 | 🎬 **Animations** | Framer Motion | 12.x | Fluid UI animations |
 | 🔐 **Backend** | Supabase | SSR | Auth, Database, Realtime |
+| 💳 **Payments** | Fawry Pay | API | S2S Webhooks & Checkout Integration |
+| 🛡️ **Security & Edge** | Cloudflare | - | Turnstile Anti-Bot, WAF, Edge Caching |
 | 🌍 **i18n** | next-intl | 4.8.3 | AR/EN internationalization |
 | 🧩 **UI System** | shadcn/ui | new-york | Design components |
 | 🔧 **Icons** | Lucide React | 0.574 | SVG icon system |
@@ -114,39 +116,30 @@ graph TB
         direction LR
         Navbar["📍 Navbar<br/><small>SVG Logo + Cart Badge + Auth</small>"]
         Hero["🎬 HeroSection<br/><small>Image Slideshow + Particles</small>"]
-        Products["🛍️ FeaturedProducts<br/><small>Supabase Fetch + AddToCart</small>"]
-        CartDrawer["🛒 CartDrawer<br/><small>Slide-out + RTL + Qty Controls</small>"]
-        Checkout["💳 Checkout<br/><small>3-Step: Review → Ship → Confirm</small>"]
-        Orders["📦 Orders<br/><small>List + Detail + Realtime Status</small>"]
-        Profile["👤 Profile<br/><small>Editable Name/Phone/Address</small>"]
+        Products["🛍️ FeaturedProducts<br/><small>QuickView Modal + AddToCart</small>"]
+        Cart["🛒 Cart/Checkout<br/><small>Slide-out + Cod/Fawry + Confetti</small>"]
+        Profile["� Profile/Orders<br/><small>Realtime Status + Info Sync</small>"]
+        Support["� Speed Dial<br/><small>WhatsApp, Messenger, Telegram</small>"]
     end
 
     subgraph Server["⚙️ Server Layer"]
-        Middleware["middleware.ts<br/><small>Auth + i18n Routing</small>"]
-        OrderAPI["api/orders<br/><small>Validation + Stock + Telegram</small>"]
-        AuthCallback["auth/callback<br/><small>OAuth Code Exchange</small>"]
+        Middleware["middleware.ts<br/><small>Auth + i18n Routing + Turnstile</small>"]
+        API["api/<br/><small>Orders, Admin CRUD, Fawry Webhooks</small>"]
     end
 
-    subgraph Supabase["🔐 Supabase Layer"]
-        Auth["Auth<br/><small>Email + Google OAuth</small>"]
-        DB["Database<br/><small>Products, Cart, Orders, Profiles</small>"]
-        Realtime["Realtime<br/><small>Live Order Status Updates</small>"]
-        RLS["Row Level Security<br/><small>Per-User Data Isolation</small>"]
+    subgraph External["🌍 External Services"]
+        Supabase["Supabase<br/><small>Auth, DB, Realtime</small>"]
+        Fawry["Fawry Pay<br/><small>Payment Gateway API</small>"]
+        Cloudflare["Cloudflare<br/><small>Edge Cache, WAF, Turnstile</small>"]
+        Social["Social APIs<br/><small>Telegram, WhatsApp, Meta</small>"]
     end
 
-    subgraph i18n["🌍 i18n Layer"]
-        Routing["routing.ts<br/><small>ar (default) / en</small>"]
-        Messages["messages/<br/><small>ar.json + en.json (120+ keys)</small>"]
-    end
-
-    Middleware --> Client
-    Client --> OrderAPI
-    OrderAPI --> DB
-    Client --> Auth
-    Client --> Realtime
-    Routing --> Middleware
-    Messages --> Client
-    RLS --> DB
+    Client --> Middleware
+    Client --> API
+    API --> Supabase
+    API --> Fawry
+    API --> Social
+    Middleware --> Cloudflare
 ```
 
 ---
@@ -191,25 +184,24 @@ graph TB
 </details>
 
 <details>
-<summary><strong>💳 Checkout Flow</strong></summary>
+<summary><strong>💳 Checkout & Payments</strong></summary>
 
 - 3-step checkout: Cart Review → Shipping Info → Confirm Order
 - Shipping form pre-filled from user profile
-- Server-side total calculation (prevents price manipulation)
-- Stock validation before order creation
-- Cash on Delivery (COD) payment
-- Animated step transitions with Framer Motion
+- **Fawry Pay Integration**: Sandbox integration with Server-to-Server (S2S) HMAC-SHA256 signature webhooks.
+- Cash on Delivery (COD) payment option.
+- Post-purchase Confetti Animation (`canvas-confetti`).
+- Cloudflare Turnstile anti-bot validation before order placement.
 
 </details>
 
 <details>
-<summary><strong>📦 Order Management</strong></summary>
+<summary><strong>📦 Order & Admin Management</strong></summary>
 
 - Orders list page with status badges (pending, confirmed, shipped, delivered)
 - Order detail page with animated status timeline
 - Supabase Realtime subscription for live status updates
-- Item list with images, sizes, and quantities
-- Shipping address and payment method display
+- **Admin API Architecture**: Protected CRUD backend endpoints (`api/admin/orders`, `api/admin/products`).
 
 </details>
 
@@ -224,12 +216,21 @@ graph TB
 </details>
 
 <details>
-<summary><strong>🤖 Telegram Integration</strong></summary>
+<summary><strong>🤖 Multi-Channel Support</strong></summary>
 
-- Floating Telegram button for customer support
-- Admin order notifications via Bot API
-- HTML-formatted order details (items, total, address)
-- Graceful handling when credentials are missing
+- **Unified Speed Dial**: Floating action button with deep links to Telegram, WhatsApp Business, and Facebook Messenger.
+- **Server-Side Routing**: `sendOrderNotification` API routing architecture designed for multi-channel payload broadcasting.
+- Graceful handling when credentials are restricted.
+
+</details>
+
+<details>
+<summary><strong>⚡ Ultimate UI/UX Upgrades</strong></summary>
+
+- **Quick View Modal**: Browse product details, select sizes/colors, and add to cart directly from the grid without page navigations.
+- **Interactive Size Guide**: Integrated modal assisting users with exact measurement queries.
+- **Free Shipping Progress Bar**: Motivating threshold meter integrated directly inside the `CartDrawer`.
+- **Cloudflare Edge Caching**: Aggressive static asset and image caching configured directly in `next.config.ts`.
 
 </details>
 
