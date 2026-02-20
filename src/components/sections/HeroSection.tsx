@@ -142,26 +142,19 @@ export default function HeroSection() {
 
                 {/* Main Headline */}
                 <motion.div
-                    initial={{ opacity: 0, y: 40 }}
+                    initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 1 }}
-                    className="mb-2"
+                    transition={{ delay: 0.5, duration: 1, type: "spring", bounce: 0.4 }}
+                    className="mb-4"
                 >
-                    <h1 className="text-5xl font-black leading-[0.95] tracking-tight sm:text-7xl lg:text-[6rem]">
-                        <span className="block bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
-                            {t("hero.headline").split(".")[0]}
+                    <h1 className="text-6xl font-black leading-[0.85] tracking-tighter sm:text-[7rem] lg:text-[10rem] uppercase">
+                        <span className="block text-white mix-blend-overlay opacity-90">
+                            {t("hero.headline").split(".")[0] || "DEFINE YOUR"}
                         </span>
-                        <span className="relative mt-2 inline-block">
-                            <span className="gradient-neon text-6xl sm:text-8xl lg:text-[7rem]">
-                                {t("brand.name")}
+                        <span className="relative mt-0 inline-block">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-br from-[var(--wide-neon)] to-[#00ff88] drop-shadow-[0_0_30px_rgba(57,255,20,0.4)]">
+                                {t("brand.name").toUpperCase() || "WIDEWEAR"}
                             </span>
-                            {/* Accent underline */}
-                            <motion.span
-                                className="absolute -bottom-2 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-transparent via-[var(--wide-neon)] to-transparent"
-                                initial={{ scaleX: 0 }}
-                                animate={{ scaleX: 1 }}
-                                transition={{ delay: 1.2, duration: 0.8 }}
-                            />
                         </span>
                     </h1>
                 </motion.div>

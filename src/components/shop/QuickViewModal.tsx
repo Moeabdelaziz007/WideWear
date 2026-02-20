@@ -22,6 +22,7 @@ interface Product {
     images: string[];
     badge: string | null;
     stock: number;
+    video_url?: string;
 }
 
 interface QuickViewModalProps {

@@ -3,7 +3,12 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/components/providers/CartProvider";
 import SpeedDial from "@/components/ui/SpeedDial";
+import { Inter, Oswald, Noto_Sans_Arabic } from "next/font/google";
 import "../globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const oswald = Oswald({ subsets: ["latin"], variable: "--font-oswald" });
+const notoSansArabic = Noto_Sans_Arabic({ subsets: ["arabic"], variable: "--font-noto-arabic" });
 
 export default async function LocaleLayout({
     children,
@@ -20,19 +25,14 @@ export default async function LocaleLayout({
 
     const messages = (await import(`@/i18n/messages/${locale}.json`)).default;
     const dir = locale === "ar" ? "rtl" : "ltr";
+    const fontVariables = `${inter.variable} ${oswald.variable} ${notoSansArabic.variable}`;
 
     return (
-        <html lang={locale} dir={dir} className="dark" suppressHydrationWarning>
+        <html lang={locale} dir={dir} className={`dark ${fontVariables}`} suppressHydrationWarning>
             <head>
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link
-                    rel="preconnect"
-                    href="https://fonts.gstatic.com"
-                    crossOrigin="anonymous"
-                />
             </head>
-            <body className="antialiased">
+            <body className="antialiased font-sans">
                 <NextIntlClientProvider locale={locale} messages={messages}>
                     <CartProvider>
                         <SpeedDial />
@@ -40,6 +40,6 @@ export default async function LocaleLayout({
                     </CartProvider>
                 </NextIntlClientProvider>
             </body>
-        </html>
+        </html >
     );
 }

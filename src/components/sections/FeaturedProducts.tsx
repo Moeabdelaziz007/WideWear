@@ -25,6 +25,7 @@ interface Product {
   stock: number;
   rating: number;
   reviews_count: number;
+  video_url?: string;
 }
 
 function ProductCard({
@@ -73,17 +74,38 @@ function ProductCard({
       transition={{ delay: index * 0.08, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--wide-border)] bg-[var(--wide-card)] transition-all duration-500 hover:border-[var(--wide-neon-dim)] hover:shadow-[0_8px_40px_rgba(57,255,20,0.08)]"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border-2 border-[var(--wide-border)] bg-[var(--wide-card)] transition-all duration-300 hover:border-[var(--wide-neon)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_var(--wide-neon)]"
     >
       {/* Image Container */}
-      <div className="relative aspect-[3/4] overflow-hidden">
+      <div className="relative aspect-[3/4] overflow-hidden bg-[var(--wide-surface)]">
+        {/* Main Image */}
         <Image
           src={product.images?.[0] ?? "/products/IMG_0575.jpg"}
           alt={name}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          className={`object-cover transition-opacity duration-500 ${isHovered && (product.video_url || product.images?.length > 1) ? 'opacity-0' : 'opacity-100 group-hover:scale-105'}`}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
+
+        {/* Video / Secondary Image on Hover */}
+        {product.video_url ? (
+          <video
+            src={product.video_url}
+            autoPlay={isHovered}
+            muted
+            loop
+            playsInline
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+          />
+        ) : product.images && product.images.length > 1 ? (
+          <Image
+            src={product.images[1]}
+            alt={`${name} secondary view`}
+            fill
+            className={`absolute inset-0 object-cover transition-transform duration-700 ${isHovered ? 'opacity-100 scale-105' : 'opacity-0'}`}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        ) : null}
 
         {/* Image Overlay */}
         <motion.div
