@@ -59,6 +59,7 @@
         "notes": "Notes (optional)",
         "paymentMethod": "Payment Method",
         "cod": "Cash on Delivery",
+        "vodafoneCash": "Vodafone Cash",
         "placeOrder": "Place Order",
         "next": "Next",
         "back": "Back",

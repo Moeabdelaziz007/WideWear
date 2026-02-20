@@ -163,6 +163,61 @@ export async function POST(request: Request) {
             })
             .eq("id", user.id);
 
+        if (paymentMethod === "fawry") {
+            try {
+                // Dynamically import to avoid edge runtime issues if crypto restricts
+                const { buildChargePayload, FAWRY_API_URL } = await import("@/lib/fawry");
+
+                const returnUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/en/checkout/success?orderId=${order.id}`;
+
+                const payload = buildChargePayload({
+                    merchantRefNum: order.id,
+                    customerProfileId: user.id,
+                    customerName: fullName,
+                    customerMobile: phone,
+                    customerEmail: user.email || 'customer@widewear.com',
+                    amount: total,
+                    currencyCode: "EGP",
+                    returnUrl: returnUrl,
+                    chargeItems: orderItems.map(item => ({
+                        itemId: item.product_id,
+                        description: item.name_en,
+                        price: item.price,
+                        quantity: item.quantity
+                    }))
+                });
+
+                // In a production scenario, you might send this to FAWRY_API_URL.
+                // For this implementation, we will mock the Fawry URL redirection or use their test UI
+                // The Fawry Hosted Checkout URL format:
+                // const fawryUrl = `https://atfawry.fawrystaging.com/ECommercePlugin/FawryPay.jsp?chargeRequest=${encodeURIComponent(JSON.stringify(payload))}`;
+
+                // Actually doing the S2S charge request to get a reference number
+                const fawryRes = await fetch(FAWRY_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const fawryData = await fawryRes.text();
+                console.log("[Fawry API Response]", fawryData);
+
+                // If S2S fails or we strictly want Hosted Checkout, we can just return the hosted URL
+                // Let's pass the hosted Checkout URL directly
+                const hostedCheckoutUrl = `https://atfawry.fawrystaging.com/ECommercePlugin/FawryPay.jsp?chargeRequest=${encodeURIComponent(JSON.stringify(payload))}`;
+
+                return NextResponse.json({
+                    orderId: order.id,
+                    fawryUrl: hostedCheckoutUrl // Frontend will redirect here
+                }, { status: 201 });
+
+            } catch (err) {
+                console.error("Fawry Generation Error:", err);
+                // Fallback to success page without fawry redirect
+                return NextResponse.json({ orderId: order.id }, { status: 201 });
+            }
+        }
+
         return NextResponse.json({ orderId: order.id }, { status: 201 });
     } catch (error) {
         console.error("[Orders API] Error:", error);

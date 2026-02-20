@@ -8,7 +8,7 @@ import crypto from "crypto";
 const FAWRY_MERCHANT_CODE = process.env.FAWRY_MERCHANT_CODE || "sandbox"; // Replace with real sandbox code or prod code
 const FAWRY_SECURE_KEY = process.env.FAWRY_SECURE_KEY || "sandbox_key"; // Keep this extremely secure
 const IS_SANDBOX = process.env.NODE_ENV !== "production" || process.env.FAWRY_TEST_MODE === "true";
-const FAWRY_API_URL = IS_SANDBOX
+export const FAWRY_API_URL = IS_SANDBOX
     ? "https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge"
     : "https://www.atfawry.com/ECommerceWeb/Fawry/payments/charge";
 

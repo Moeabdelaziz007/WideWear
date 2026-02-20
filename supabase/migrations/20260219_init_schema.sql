@@ -115,7 +115,9 @@ CREATE TABLE IF NOT EXISTS orders (
     total DECIMAL(10, 2) NOT NULL,
     shipping_address JSONB NOT NULL,
     phone TEXT NOT NULL,
-    payment_method TEXT DEFAULT 'cod' CHECK (payment_method IN ('cod', 'card', 'fawry')),
+    payment_method TEXT DEFAULT 'cod' CHECK (
+        payment_method IN ('cod', 'card', 'fawry', 'vodafone_cash')
+    ),
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()

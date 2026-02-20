@@ -99,15 +99,16 @@ export default function CheckoutPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
 
-            // If Fawry, redirect to Fawry Sandbox (Or wait for backend to return URL in next step)
-            if (paymentMethod === "fawry") {
-                // Placeholder redirect: In reality the API /orders would return a checkout URL
-                // We will implement the actual charge request generation in the next step
-                console.log("Redirecting to Fawry with Order ID:", data.orderId);
+            // If Fawry, redirect to the Hosted Checkout Link
+            if (paymentMethod === "fawry" && data.fawryUrl) {
+                console.log("Redirecting to Fawry Hosted Checkout...");
+                window.location.href = data.fawryUrl;
+                return; // Stop execution here, don't redirect to success page yet
             }
 
             router.push(`/${locale}/checkout/success?orderId=${data.orderId}`);
         } catch (err) {
+            console.error(err);
             setError(err instanceof Error ? err.message : "Something went wrong");
         } finally {
             setLoading(false);
@@ -300,6 +301,29 @@ export default function CheckoutPage() {
                                                         </div>
                                                         <p className="mt-1 text-xs text-[var(--wide-text-secondary)]">
                                                             {isRTL ? "الدفع نقداً عند استلام الطلب" : "Pay with cash upon delivery"}
+                                                        </p>
+                                                    </div>
+                                                </button>
+
+                                                {/* Vodafone Cash */}
+                                                <button
+                                                    onClick={() => setPaymentMethod("vodafone_cash")}
+                                                    className={`group relative flex items-center gap-4 rounded-xl border p-4 text-left transition-all ${paymentMethod === "vodafone_cash"
+                                                        ? "border-[#E81123] bg-[#E81123]/5 ring-1 ring-[#E81123]" // Vodafone Red
+                                                        : "border-[var(--wide-border)] bg-[var(--wide-bg-primary)] hover:border-[var(--wide-text-muted)]"
+                                                        }`}
+                                                >
+                                                    <div className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full border transition-all ${paymentMethod === "vodafone_cash" ? "border-[#E81123]" : "border-[var(--wide-text-muted)]"}`}>
+                                                        {paymentMethod === "vodafone_cash" && <div className="h-2.5 w-2.5 rounded-full bg-[#E81123]" />}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`font-semibold transition-colors ${paymentMethod === "vodafone_cash" ? "text-[var(--wide-text-primary)]" : "text-[var(--wide-text-muted)]"}`}>
+                                                                {t("vodafoneCash")}
+                                                            </span>
+                                                        </div>
+                                                        <p className="mt-1 text-xs text-[var(--wide-text-secondary)]">
+                                                            {isRTL ? "الدفع عبر محفظة فودافون كاش" : "Direct wallet transfer"}
                                                         </p>
                                                     </div>
                                                 </button>

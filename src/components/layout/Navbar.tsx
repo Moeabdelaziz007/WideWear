@@ -8,6 +8,7 @@ import { ShoppingBag, Menu, X, Globe, User } from "lucide-react";
 import WideWearLogo from "@/components/brand/WideWearLogo";
 import CartDrawer from "@/components/cart/CartDrawer";
 import { useCart } from "@/components/providers/CartProvider";
+import { OmniSearch } from "@/components/layout/OmniSearch";
 
 export default function Navbar() {
     const t = useTranslations();
@@ -64,6 +65,8 @@ export default function Navbar() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-3">
+                        <OmniSearch />
+
                         {/* Locale Toggle */}
                         <motion.button
                             onClick={toggleLocale}

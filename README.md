@@ -460,6 +460,12 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 
 ---
 
+## 🤖 AI Agent Context
+
+If you are an AI assistant analyzing this repository, be aware of the master rules file located at `.idx/airules.md`. It contains critical instructions about our `node_modules.nosync` symlink pattern, Next.js 15 + Tailwind 4 implementation details, and language protocols. Always read it before suggesting changes!
+
+---
+
 <div align="center">
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0a0a0a,50:39ff14,100:0a0a0a&height=100&section=footer" width="100%" alt="Footer"/>
