@@ -118,6 +118,9 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_method TEXT DEFAULT 'cod' CHECK (
         payment_method IN ('cod', 'card', 'fawry', 'vodafone_cash')
     ),
+    shipping_method TEXT DEFAULT 'standard' CHECK (
+        shipping_method IN ('standard','fast','pickup')
+    ),
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()

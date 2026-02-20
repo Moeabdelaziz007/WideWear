@@ -2,6 +2,8 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/components/providers/CartProvider";
+import { WishlistProvider } from "@/components/providers/WishlistProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import SpeedDial from "@/components/ui/SpeedDial";
 import { Inter, Oswald, Noto_Sans_Arabic } from "next/font/google";
 import "../globals.css";
@@ -34,10 +36,14 @@ export default async function LocaleLayout({
             </head>
             <body className="antialiased font-sans">
                 <NextIntlClientProvider locale={locale} messages={messages}>
-                    <CartProvider>
-                        <SpeedDial />
-                        {children}
-                    </CartProvider>
+                    <ThemeProvider>
+                        <CartProvider>
+                            <WishlistProvider>
+                                <SpeedDial />
+                                {children}
+                            </WishlistProvider>
+                        </CartProvider>
+                    </ThemeProvider>
                 </NextIntlClientProvider>
             </body>
         </html >

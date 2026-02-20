@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Search, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
+import useFocusTrap from "@/lib/useFocusTrap";
 
 type SearchResult = {
     id: string;
@@ -14,13 +16,32 @@ type SearchResult = {
     images: string[];
 };
 
+// skeleton for loading
+function SearchResultSkeleton() {
+    return (
+        <div className="flex cursor-pointer items-center gap-4 rounded-lg p-3 animate-pulse">
+            <div className="h-16 w-16 rounded-md bg-[var(--wide-bg-secondary)]" />
+            <div className="flex-1 space-y-2">
+                <div className="h-4 w-1/2 bg-[var(--wide-bg-secondary)]" />
+                <div className="h-3 w-1/3 bg-[var(--wide-bg-secondary)]" />
+            </div>
+        </div>
+    );
+}
+
 export function OmniSearch() {
     const locale = useLocale();
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
-    const modalRef = useRef<HTMLDivElement>(null);
+    const [activeIndex, setActiveIndex] = useState<number>(-1);
+    const modalRef = useFocusTrap(isOpen);
+
+    useEffect(() => {
+        setActiveIndex(-1);
+    }, [results]);
 
     // Toggle Modal
     const handleToggle = () => setIsOpen(!isOpen);
@@ -32,6 +53,22 @@ export function OmniSearch() {
             if ((e.metaKey || e.ctrlKey) && e.key === "k") {
                 e.preventDefault();
                 setIsOpen(true);
+            }
+
+            if (isOpen) {
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setActiveIndex((prev) => Math.min(prev + 1, results.length - 1));
+                } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setActiveIndex((prev) => Math.max(prev - 1, 0));
+                } else if (e.key === "Enter" && activeIndex >= 0) {
+                    const product = results[activeIndex];
+                    if (product) {
+                        setIsOpen(false);
+                        router.push(`/${locale}/products/${product.id}`);
+                    }
+                }
             }
         };
 
@@ -50,7 +87,7 @@ export function OmniSearch() {
             document.removeEventListener("keydown", handleKeyDown);
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [isOpen]);
+    }, [isOpen, results, activeIndex, locale]);
 
     // Perform Search Query
     useEffect(() => {
@@ -84,13 +121,18 @@ export function OmniSearch() {
                 className="relative flex items-center justify-center rounded-full p-2 text-[var(--wide-text-secondary)] transition-colors hover:bg-[var(--wide-bg-secondary)] hover:text-[var(--wide-neon)]"
                 aria-label="Search products"
                 title="Search (Cmd+K)"
+                role="button"
             >
                 <Search className="h-5 w-5" />
             </button>
 
             {/* Search Modal Overlay */}
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 px-4 pt-20 backdrop-blur-sm sm:pt-32">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 px-4 pt-20 backdrop-blur-sm sm:pt-32"
+                >
                     <div
                         ref={modalRef}
                         className="w-full max-w-xl overflow-hidden rounded-2xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] shadow-2xl"
@@ -120,19 +162,44 @@ export function OmniSearch() {
 
                         {/* Search Results Area */}
                         {query.length >= 2 && (
-                            <div className="max-h-96 overflow-y-auto p-2">
-                                {results.length === 0 && !loading ? (
+                            <div
+                                role="listbox"
+                                aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
+                                className="max-h-96 overflow-y-auto p-2"
+                                // ensure active item is visible when navigating
+                                ref={(el) => {
+                                    if (el && activeIndex >= 0) {
+                                        const activeEl = el.querySelector(`#search-result-${activeIndex}`) as HTMLElement;
+                                        if (activeEl) {
+                                            activeEl.scrollIntoView({ block: 'nearest' });
+                                        }
+                                    }
+                                }}
+                            >
+                                {loading ? (
+                                    <div className="space-y-2">
+                                        {[...Array(4)].map((_, i) => (
+                                            <SearchResultSkeleton key={i} />
+                                        ))}
+                                    </div>
+                                ) : results.length === 0 ? (
                                     <p className="py-6 text-center text-sm text-[var(--wide-text-muted)]">
                                         {locale === "ar" ? "لم نتمكن من العثور على ما تبحث عنه." : "Couldn't find what you're looking for."}
                                     </p>
                                 ) : (
                                     <div className="flex flex-col gap-1">
-                                        {results.map((product) => (
+                                        {results.map((product, idx) => (
                                             <a
+                                                id={`search-result-${idx}`}
                                                 key={product.id}
-                                                href={`/${locale}/#featured`} // Anchor to featured products section since standalone product pages aren't full built yet
+                                                href={`/${locale}/products/${product.id}`}
                                                 onClick={() => setIsOpen(false)}
-                                                className="group flex cursor-pointer items-center gap-4 rounded-lg p-3 transition-colors hover:bg-[var(--wide-bg-secondary)]"
+                                                role="option"
+                                                aria-selected={activeIndex === idx}
+                                                className={`group flex cursor-pointer items-center gap-4 rounded-lg p-3 transition-colors hover:bg-[var(--wide-bg-secondary)] ${
+                                                    activeIndex === idx ? "bg-[var(--wide-bg-secondary)]" : ""
+                                                }`}
+                                                onMouseEnter={() => setActiveIndex(idx)}
                                             >
                                                 <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-[var(--wide-border)] bg-[var(--wide-bg-primary)]">
                                                     {product.images && product.images[0] && (
@@ -140,6 +207,7 @@ export function OmniSearch() {
                                                             src={product.images[0]}
                                                             alt={locale === "ar" ? product.name_ar : product.name_en}
                                                             fill
+                                                            loading="lazy"
                                                             className="object-cover transition-transform group-hover:scale-105"
                                                         />
                                                     )}

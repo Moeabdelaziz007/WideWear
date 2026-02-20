@@ -74,6 +74,7 @@ export function formatOrderNotification(order: {
     address: string;
     total: number;
     paymentMethod: string;
+    shippingMethod?: string;
     items: { name: string; size: string; quantity: number }[];
 }) {
     const itemsList = order.items
@@ -86,6 +87,7 @@ export function formatOrderNotification(order: {
 👤 ${order.customerName}
 📱 ${order.phone}
 📍 ${order.address}
+✈️ ${order.shippingMethod || "standard"}
 💰 <b>${order.total.toLocaleString()} EGP</b> (${order.paymentMethod === "cod" ? "دفع عند الاستلام" : order.paymentMethod})
 
 📦 <b>${order.items.length} منتج:</b>

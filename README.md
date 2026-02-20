@@ -237,6 +237,27 @@ graph TB
 </details>
 
 <details>
+<summary><strong>🛠 Latest Enhancements</strong></summary>
+
+- **Wishlist functionality**: Heart icon added to product cards and quick-view modal backed by `WishlistProvider` (localStorage) with toggle API.
+- **Lazy image loading** across the site (`loading="lazy"` on all `<Image>` components) to improve initial page speed.
+- **Quick-view gallery navigation**: arrows and keyboard support (←/→) for image/video browsing inside the modal.
+- **Navbar shrink effect** after scrolling, plus smarter locale toggle that preserves query strings & hash.
+- **Accessibility improvements**: ARIA labels/roles throughout, focus traps for modals (search, cart, quick-view), keyboard navigation in search (↑↓/Enter), and Escape key handling.
+- **Color contrast update**: text-muted color adjusted for WCAG 4.5:1 compliance.
+- **Checkout form validation**: real-time error messages and phone pattern checking before proceeding to confirmation step.
+- **Shipping options**: customers can choose standard/fast pickup or shipping; preference is persisted, sent to server, and visible in both order summary and admin panel.
+- **Dark/Light mode & performance toggle**: users can switch between light and dark palettes; a "performance mode" disables animations and reduces motion for low‑powered devices. Preferences persist across sessions.
+- **Cart UX upgrades**: quantity can be entered directly, operations show temporary confirmation toast, and drawer auto‑closes after inactivity.
+
+> **تحديثات بالعربي:**
+> - **خيارات الشحن**: يمكن للعملاء اختيار الشحن العادي أو السريع أو الاستلام. يتم حفظ التفضيل محلياً، ويتم إرساله مع الطلب ويظهر في ملخص الطلب ولوحة الإدارة.
+> - **الوضع الليلي/الفاتح ووضع الأداء**: يمكن تبديل الألوان بين الفاتحة والداكنة؛ ويوجد خيار "وضع الأداء" لإيقاف الأنيميشن وتقليل الحركة على الأجهزة الضعيفة. التفضيلات محفوظة عبر الجلسات.
+- **Performance improvements roadmap**: animations are now optional, and future iterations will optimize image dimensions, consider sprites, audit with Lighthouse to boost PWA/SSR scores and optionally disable heavy visual effects like hero particles on low‑end devices.
+
+</details>
+
+<details>
 <summary><strong>🌍 Internationalization</strong></summary>
 
 - Full Arabic (RTL) and English (LTR) support

@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ExternalLink, Ruler, ShoppingBag, Plus, Minus } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { X, ExternalLink, Ruler, ShoppingBag, Plus, Minus, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/components/providers/CartProvider";
+import { useWishlist } from "@/components/providers/WishlistProvider";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import SizeGuideModal from "./SizeGuideModal";
+import useFocusTrap from "@/lib/useFocusTrap";
 
 interface Product {
     id: string;
@@ -36,6 +39,40 @@ export default function QuickViewModal({ isOpen, onClose, product }: QuickViewMo
     const locale = useLocale();
     const isRTL = locale === "ar";
     const { addItem } = useCart();
+    const { has: hasWish, toggle: toggleWish } = useWishlist();
+    const isWish = hasWish(product?.id ?? "");
+    const { performanceMode } = useTheme();
+    const reduceMotion = useReducedMotion();
+    const disableAnimations = performanceMode || reduceMotion;
+
+    const containerRef = useFocusTrap(isOpen);
+
+    // build list of media (video first if present)
+    const media: { type: "image" | "video"; src: string }[] = [];
+    if (product?.video_url) {
+        media.push({ type: "video", src: product.video_url });
+    }
+    product?.images?.forEach((src) => media.push({ type: "image", src }));
+    const [galleryIndex, setGalleryIndex] = useState(0);
+
+    useEffect(() => {
+        if (isOpen) setGalleryIndex(0);
+    }, [isOpen, product]);
+
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+            if (isOpen) {
+                if (e.key === "ArrowRight") {
+                    setGalleryIndex((i) => Math.min(i + 1, media.length - 1));
+                } else if (e.key === "ArrowLeft") {
+                    setGalleryIndex((i) => Math.max(i - 1, 0));
+                }
+            }
+        };
+        if (isOpen) document.addEventListener("keydown", handleKey);
+        return () => document.removeEventListener("keydown", handleKey);
+    }, [isOpen, onClose, media.length]);
 
     const [selectedSize, setSelectedSize] = useState<string>("");
     const [selectedColor, setSelectedColor] = useState<string>("");
@@ -78,17 +115,22 @@ export default function QuickViewModal({ isOpen, onClose, product }: QuickViewMo
                 {isOpen && (
                     <>
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
+                            initial={disableAnimations ? {} : { opacity: 0 }}
+                            animate={disableAnimations ? {} : { opacity: 1 }}
+                            exit={disableAnimations ? {} : { opacity: 0 }}
                             onClick={onClose}
                             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+                            aria-hidden="true"
                         />
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 py-10 pointer-events-none">
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                ref={containerRef}
+                                role="dialog"
+                                aria-modal="true"
+                                aria-label={isRTL ? "عرض سريع للمنتج" : "Quick view product"}
+                                initial={disableAnimations ? {} : { opacity: 0, scale: 0.95, y: 20 }}
+                                animate={disableAnimations ? {} : { opacity: 1, scale: 1, y: 0 }}
+                                exit={disableAnimations ? {} : { opacity: 0, scale: 0.95, y: 20 }}
                                 className="pointer-events-auto relative flex w-full max-w-4xl max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-[var(--wide-border)] bg-[var(--wide-bg-secondary)] shadow-2xl md:flex-row"
                             >
                                 {/* Close Button */}
@@ -102,17 +144,51 @@ export default function QuickViewModal({ isOpen, onClose, product }: QuickViewMo
 
                                 {/* Image Gallery Area */}
                                 <div className="relative h-64 w-full bg-[var(--wide-bg-primary)] md:h-auto md:w-1/2">
-                                    <Image
-                                        src={product.images[0] || "/products/IMG_0575.jpg"}
-                                        alt={name}
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 100vw, 50vw"
-                                    />
+                                    {/* current media */}
+                                    {media[galleryIndex]?.type === "video" ? (
+                                        <video
+                                            src={media[galleryIndex].src}
+                                            autoPlay
+                                            muted
+                                            loop
+                                            playsInline
+                                            className="absolute inset-0 h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <Image
+                                            src={media[galleryIndex]?.src || "/products/IMG_0575.jpg"}
+                                            alt={name}
+                                            fill
+                                            loading="lazy"
+                                            className="object-cover"
+                                            sizes="(max-width: 768px) 100vw, 50vw"
+                                        />
+                                    )}
+
                                     {product.badge && (
                                         <div className="absolute left-4 top-4 rounded-full bg-[var(--wide-neon)] px-3 py-1 text-xs font-bold text-black shadow-[0_0_10px_rgba(57,255,20,0.5)]">
                                             {product.badge}
                                         </div>
+                                    )}
+
+                                    {/* navigation arrows */}
+                                    {media.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={() => setGalleryIndex((i) => Math.max(i - 1, 0))}
+                                                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
+                                                aria-label="Previous"
+                                            >
+                                                <ChevronLeft className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => setGalleryIndex((i) => Math.min(i + 1, media.length - 1))}
+                                                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
+                                                aria-label="Next"
+                                            >
+                                                <ChevronRight className="h-5 w-5" />
+                                            </button>
+                                        </>
                                     )}
                                 </div>
 
@@ -130,6 +206,14 @@ export default function QuickViewModal({ isOpen, onClose, product }: QuickViewMo
                                                     {formatPrice(product.price)}
                                                 </span>
                                             )}
+                                            <button
+                                                onClick={() => toggleWish(product.id)}
+                                                className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                                                aria-label={isWish ? (isRTL ? "إزالة من المفضلة" : "Remove from wishlist") : (isRTL ? "أضف للمفضلة" : "Add to wishlist")}
+                                                role="button"
+                                            >
+                                                <Heart className={`h-4 w-4 ${isWish ? "fill-current" : ""}`} />
+                                            </button>
                                         </div>
                                     </div>
 

@@ -14,7 +14,7 @@ export default async function AdminOrdersPage({ params }: { params: Promise<{ lo
     const { data: orders, error } = await supabase
         .from("orders")
         .select(`
-            id, created_at, total, status, payment_method, shipping_address,
+            id, created_at, total, status, payment_method, shipping_method, shipping_address,
             user:profiles(full_name, phone)
         `)
         .order("created_at", { ascending: false });

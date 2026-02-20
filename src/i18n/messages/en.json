@@ -60,6 +60,10 @@
         "paymentMethod": "Payment Method",
         "cod": "Cash on Delivery",
         "vodafoneCash": "Vodafone Cash",
+        "shippingMethod": "Shipping Method",
+        "standard": "Standard (3-5 days)",
+        "fast": "Fast (1-2 days - EGP 50)",
+        "pickup": "Pickup (Free)",
         "placeOrder": "Place Order",
         "next": "Next",
         "back": "Back",
@@ -85,7 +89,8 @@
         "confirmed": "Confirmed",
         "shipped": "Shipped",
         "delivered": "Delivered",
-        "cancelled": "Cancelled"
+        "cancelled": "Cancelled",
+        "shippingMethod": "Shipping Method"
     },
     "auth": {
         "signIn": "Sign In",

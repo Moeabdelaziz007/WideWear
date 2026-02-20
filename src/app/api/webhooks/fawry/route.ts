@@ -5,11 +5,18 @@ import { sendTelegramNotification } from "@/lib/telegram";
 import * as Sentry from "@sentry/nextjs";
 
 const FAWRY_SECURE_KEY = process.env.FAWRY_SECURE_KEY || "sandbox_key";
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Initialize Supabase Admin client to bypass RLS for webhook updates
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+// Initialize Supabase Admin client lazily (avoids build-time errors if env vars are missing)
+let supabaseAdmin: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+    if (supabaseAdmin) return supabaseAdmin;
+    if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+        supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    }
+    return supabaseAdmin;
+}
 
 export async function POST(req: Request) {
     try {
@@ -56,8 +63,15 @@ export async function POST(req: Request) {
         }
 
         // Update Order in Supabase
-        const { error } = await supabaseAdmin
+        const admin = getSupabaseAdmin();
+        if (!admin) {
+            console.error("[Fawry Webhook] Supabase credentials not configured");
+            return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+        }
+        const { error } = await admin
             .from("orders")
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore generic inference broken
             .update({ status: newDbStatus })
             .eq("id", merchantRefNum);
 

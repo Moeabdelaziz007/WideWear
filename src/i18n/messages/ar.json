@@ -60,6 +60,10 @@
         "paymentMethod": "طريقة الدفع",
         "cod": "الدفع عند الاستلام",
         "vodafoneCash": "فودافون كاش",
+        "shippingMethod": "طريقة التوصيل",
+        "standard": "عادي (٣-٥ أيام)",
+        "fast": "سريع (١-٢ يوم - ٥٠ج)",
+        "pickup": "استلام من المتجر (مجاني)",
         "placeOrder": "تأكيد الطلب",
         "next": "التالي",
         "back": "رجوع",
@@ -85,7 +89,8 @@
         "confirmed": "تم التأكيد",
         "shipped": "تم الشحن",
         "delivered": "تم التوصيل",
-        "cancelled": "ملغي"
+        "cancelled": "ملغي",
+        "shippingMethod": "طريقة التوصيل"
     },
     "auth": {
         "signIn": "تسجيل الدخول",

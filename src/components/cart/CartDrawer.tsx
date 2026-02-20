@@ -1,10 +1,13 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/components/providers/CartProvider";
+import useFocusTrap from "@/lib/useFocusTrap";
+import { useEffect, useState } from "react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -16,6 +19,24 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     const locale = useLocale();
     const isRTL = locale === "ar";
     const { items, count, total, removeItem, updateQuantity, user } = useCart();
+    const { performanceMode } = useTheme();
+    const reduceMotion = useReducedMotion();
+    const disableAnimations = performanceMode || reduceMotion;
+
+    const [message, setMessage] = useState<string | null>(null);
+    const [autoCloseTimer, setAutoCloseTimer] = useState<number | null>(null);
+
+    const containerRef = useFocusTrap(isOpen);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        if (isOpen) {
+            document.addEventListener("keydown", handleKeyDown);
+        }
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, onClose]);
 
     const FREE_SHIPPING_THRESHOLD = 2000;
     const isFreeShipping = total >= FREE_SHIPPING_THRESHOLD;
@@ -29,32 +50,73 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             maximumFractionDigits: 0,
         }).format(price);
 
+    const showMessage = (text: string) => {
+        setMessage(text);
+        setTimeout(() => setMessage(null), 3000);
+    };
+
+    // auto-close handling
+    useEffect(() => {
+        if (!isOpen) return;
+        const startTimer = () => {
+            clearTimer();
+            const id = window.setTimeout(() => {
+                onClose();
+            }, 8000);
+            setAutoCloseTimer(id);
+        };
+        const clearTimer = () => {
+            if (autoCloseTimer) window.clearTimeout(autoCloseTimer);
+        };
+        startTimer();
+        // clear when unmount/close
+        return clearTimer;
+    }, [isOpen]);
+
+
     return (
         <AnimatePresence>
             {isOpen && (
                 <>
                     {/* Backdrop */}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        initial={disableAnimations ? {} : { opacity: 0 }}
+                        animate={disableAnimations ? {} : { opacity: 1 }}
+                        exit={disableAnimations ? {} : { opacity: 0 }}
                         onClick={onClose}
                         className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+                        aria-hidden="true"
                     />
 
                     {/* Drawer */}
                     <motion.div
-                        initial={{ x: isRTL ? "-100%" : "100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: isRTL ? "-100%" : "100%" }}
-                        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                        ref={containerRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={isRTL ? "سلة التسوق" : "Shopping cart"}
+                        initial={disableAnimations ? {} : { x: isRTL ? "-100%" : "100%" }}
+                        animate={disableAnimations ? {} : { x: 0 }}
+                        exit={disableAnimations ? {} : { x: isRTL ? "-100%" : "100%" }}
+                        transition={disableAnimations ? {} : { type: "spring", damping: 30, stiffness: 300 }}
                         className={`fixed top-0 z-50 flex h-full w-full max-w-md flex-col border-[var(--wide-border)] bg-[var(--wide-bg-secondary)] shadow-2xl ${isRTL ? "left-0 border-r" : "right-0 border-l"
                             }`}
+                        onMouseEnter={() => {
+                            if (autoCloseTimer) {
+                                window.clearTimeout(autoCloseTimer);
+                                setAutoCloseTimer(null);
+                            }
+                        }}
+                        onMouseLeave={() => {
+                            if (!autoCloseTimer) {
+                                const id = window.setTimeout(() => onClose(), 8000);
+                                setAutoCloseTimer(id);
+                            }
+                        }}
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between border-b border-[var(--wide-border)] p-5">
                             <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--wide-text-primary)]">
-                                <ShoppingBag className="h-5 w-5 text-[var(--wide-neon)]" />
+                                <ShoppingBag className="h-5 w-5 text-[var(--wide-neon)]" aria-hidden="true" />
                                 {t("title")}
                                 {count > 0 && (
                                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--wide-neon)] text-xs font-bold text-black">
@@ -62,12 +124,19 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                     </span>
                                 )}
                             </h2>
+                            {message && (
+                                <div className="absolute top-full left-0 right-0 bg-[var(--wide-neon)] text-black py-2 text-center text-sm font-medium">
+                                    {message}
+                                </div>
+                            )}
                             <motion.button
                                 onClick={onClose}
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 title={isRTL ? "إغلاق" : "Close"}
+                                aria-label={isRTL ? "إغلاق السلة" : "Close cart"}
                                 className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-muted)] transition-colors hover:text-[var(--wide-neon)]"
+                                role="button"
                             >
                                 <X className="h-5 w-5" />
                             </motion.button>
@@ -108,9 +177,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                             <motion.div
                                                 key={item.id}
                                                 layout
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, x: isRTL ? -100 : 100 }}
+                                                initial={disableAnimations ? {} : { opacity: 0, y: 10 }}
+                                                animate={disableAnimations ? {} : { opacity: 1, y: 0 }}
+                                                exit={disableAnimations ? {} : { opacity: 0, x: isRTL ? -100 : 100 }}
                                                 className="flex gap-4 rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] p-3"
                                             >
                                                 {/* Image */}
@@ -119,6 +188,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                         src={image}
                                                         alt={name ?? "Product"}
                                                         fill
+                                                        loading="lazy"
                                                         className="object-cover"
                                                         sizes="80px"
                                                     />
@@ -147,21 +217,33 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                         {/* Quantity Controls */}
                                                         <div className="flex items-center gap-1">
                                                             <button
-                                                                onClick={() =>
-                                                                    updateQuantity(item.id, item.quantity - 1)
-                                                                }
+                                                                onClick={() => {
+                                                                    const newQty = item.quantity - 1;
+                                                                    updateQuantity(item.id, newQty);
+                                                                    showMessage(locale === "ar" ? "تم تحديث الكمية" : "Quantity updated");
+                                                                }}
                                                                 title={isRTL ? "تقليل الكمية" : "Decrease quantity"}
                                                                 className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--wide-surface)] text-[var(--wide-text-muted)] transition-colors hover:text-[var(--wide-neon)]"
                                                             >
                                                                 <Minus className="h-3 w-3" />
                                                             </button>
-                                                            <span className="w-8 text-center text-sm font-medium text-[var(--wide-text-primary)]">
-                                                                {item.quantity}
-                                                            </span>
+                                                            <input
+                                                                type="number"
+                                                                value={item.quantity}
+                                                                min={1}
+                                                                onChange={(e) => {
+                                                                    const v = parseInt(e.target.value, 10) || 1;
+                                                                    updateQuantity(item.id, v);
+                                                                }}
+                                                                onBlur={() => showMessage(locale === "ar" ? "تم تحديث الكمية" : "Quantity updated")}
+                                                                className="w-12 rounded-lg border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-2 py-1 text-center text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]"
+                                                            />
                                                             <button
-                                                                onClick={() =>
-                                                                    updateQuantity(item.id, item.quantity + 1)
-                                                                }
+                                                                onClick={() => {
+                                                                    const newQty = item.quantity + 1;
+                                                                    updateQuantity(item.id, newQty);
+                                                                    showMessage(locale === "ar" ? "تم تحديث الكمية" : "Quantity updated");
+                                                                }}
                                                                 title={isRTL ? "زيادة الكمية" : "Increase quantity"}
                                                                 className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--wide-surface)] text-[var(--wide-text-muted)] transition-colors hover:text-[var(--wide-neon)]"
                                                             >
@@ -175,7 +257,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                                 {formatPrice(price * item.quantity)}
                                                             </span>
                                                             <button
-                                                                onClick={() => removeItem(item.id)}
+                                                                onClick={() => {
+                                                                    removeItem(item.id);
+                                                                    showMessage(locale === "ar" ? "تم حذف العنصر" : "Item removed");
+                                                                }}
                                                                 title={isRTL ? "حذف" : "Remove"}
                                                                 className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--wide-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-400"
                                                             >

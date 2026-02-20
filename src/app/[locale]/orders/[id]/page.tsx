@@ -17,6 +17,7 @@ interface OrderDetail {
     shipping_address: { fullName: string; address1: string; address2?: string; city: string };
     phone: string;
     payment_method: string;
+    shipping_method?: string;
     notes: string | null;
     created_at: string;
     order_items: {
@@ -36,6 +37,7 @@ const STATUS_STEPS = ["pending", "confirmed", "shipped", "delivered"];
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const t = useTranslations("orders");
+    const tc = useTranslations("checkout");
     const locale = useLocale();
     const router = useRouter();
     const { user } = useCart();
@@ -198,6 +200,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                                 <p>{order.shipping_address.address1}</p>
                                 {order.shipping_address.address2 && <p>{order.shipping_address.address2}</p>}
                                 <p>{order.shipping_address.city}</p>
+                                {order.shipping_method && (
+                                    <p className="mt-1 text-sm text-[var(--wide-text-secondary)]">
+                                        <span className="font-medium text-[var(--wide-text-primary)]">{t("shippingMethod")}:</span> {tc(order.shipping_method)}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <div className="rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-secondary)] p-5">

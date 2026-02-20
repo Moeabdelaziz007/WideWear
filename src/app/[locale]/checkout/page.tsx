@@ -26,6 +26,8 @@ export default function CheckoutPage() {
     const [error, setError] = useState<string | null>(null);
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
+
+
     // Fallback sitekey for testing if env var not set
     const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
 
@@ -37,6 +39,49 @@ export default function CheckoutPage() {
     const [city, setCity] = useState("Cairo");
     const [notes, setNotes] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("cod"); // 'cod' or 'fawry'
+    const [shippingMethod, setShippingMethod] = useState("standard"); // 'standard','fast','pickup'
+
+    // persist checkout state in localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem("checkout");
+        if (saved) {
+            try {
+                const obj = JSON.parse(saved);
+                if (obj.fullName) setFullName(obj.fullName);
+                if (obj.phone) setPhone(obj.phone);
+                if (obj.address1) setAddress1(obj.address1);
+                if (obj.address2) setAddress2(obj.address2);
+                if (obj.city) setCity(obj.city);
+                if (obj.notes) setNotes(obj.notes);
+                if (obj.paymentMethod) setPaymentMethod(obj.paymentMethod);
+                if (obj.shippingMethod) setShippingMethod(obj.shippingMethod);
+                if (obj.step) setStep(obj.step);
+            } catch {
+                // ignore
+            }
+        }
+    }, []);
+
+    const saveState = () => {
+        const obj = { fullName, phone, address1, address2, city, notes, paymentMethod, shippingMethod, step };
+        localStorage.setItem("checkout", JSON.stringify(obj));
+    };
+
+    useEffect(() => {
+        saveState();
+    }, [fullName, phone, address1, address2, city, notes, paymentMethod, shippingMethod, step]);
+
+    const [errors, setErrors] = useState<{[key:string]: string}>({});
+
+    const validate = () => {
+        const errs: {[key:string]: string} = {};
+        if (!fullName.trim()) errs.fullName = t("required");
+        if (!address1.trim()) errs.address1 = t("required");
+        const phonePattern = /^01[0-9]{9}$/; // simple Egyptian mobile
+        if (!phonePattern.test(phone)) errs.phone = t("invalidPhone");
+        setErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
 
     // Redirect if not logged in
     useEffect(() => {
@@ -93,6 +138,7 @@ export default function CheckoutPage() {
                     city,
                     notes,
                     paymentMethod, // Dynamic now
+                    shippingMethod,
                 }),
             });
 
@@ -226,15 +272,18 @@ export default function CheckoutPage() {
                                         <div className="space-y-4 rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-secondary)] p-6">
                                             <div>
                                                 <label htmlFor="checkout-fullname" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("fullName")} *</label>
-                                                <input id="checkout-fullname" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <input id="checkout-fullname" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} onBlur={validate} required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                {errors.fullName && <p className="mt-1 text-xs text-red-400">{errors.fullName}</p>}
                                             </div>
                                             <div>
                                                 <label htmlFor="checkout-phone" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("phone")} *</label>
-                                                <input id="checkout-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01XXXXXXXXX" required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <input id="checkout-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={validate} placeholder="01XXXXXXXXX" required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                {errors.phone && <p className="mt-1 text-xs text-red-400">{errors.phone}</p>}
                                             </div>
                                             <div>
                                                 <label htmlFor="checkout-addr1" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("address1")} *</label>
-                                                <input id="checkout-addr1" type="text" value={address1} onChange={(e) => setAddress1(e.target.value)} required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                <input id="checkout-addr1" type="text" value={address1} onChange={(e) => setAddress1(e.target.value)} onBlur={validate} required className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
+                                                {errors.address1 && <p className="mt-1 text-xs text-red-400">{errors.address1}</p>}
                                             </div>
                                             <div>
                                                 <label htmlFor="checkout-addr2" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("address2")}</label>
@@ -248,12 +297,59 @@ export default function CheckoutPage() {
                                                 <label htmlFor="checkout-notes" className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("notes")}</label>
                                                 <textarea id="checkout-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full rounded-xl border border-[var(--wide-border)] bg-[var(--wide-bg-primary)] px-4 py-3 text-sm text-[var(--wide-text-primary)] outline-none focus:border-[var(--wide-neon)]" />
                                             </div>
+
+                                            {/* Shipping method selector */}
+                                            <div>
+                                                <span className="mb-1.5 block text-xs font-medium text-[var(--wide-text-muted)]">{t("shippingMethod")}</span>
+                                                <div className="space-y-2">
+                                                    <label className="flex items-center gap-2">
+                                                        <input
+                                                            type="radio"
+                                                            name="shippingMethod"
+                                                            value="standard"
+                                                            checked={shippingMethod === "standard"}
+                                                            onChange={() => setShippingMethod("standard")}
+                                                            className="h-4 w-4"
+                                                        />
+                                                        <span className="text-sm">
+                                                            {t("standard")} {isRTL ? "" : "– free"}
+                                                        </span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2">
+                                                        <input
+                                                            type="radio"
+                                                            name="shippingMethod"
+                                                            value="fast"
+                                                            checked={shippingMethod === "fast"}
+                                                            onChange={() => setShippingMethod("fast")}
+                                                            className="h-4 w-4"
+                                                        />
+                                                        <span className="text-sm">
+                                                            {t("fast")} {isRTL ? "" : "– EGP 50"}
+                                                        </span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2">
+                                                        <input
+                                                            type="radio"
+                                                            name="shippingMethod"
+                                                            value="pickup"
+                                                            checked={shippingMethod === "pickup"}
+                                                            onChange={() => setShippingMethod("pickup")}
+                                                            className="h-4 w-4"
+                                                        />
+                                                        <span className="text-sm">
+                                                            {t("pickup")}
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
                                         </div>
                                         <div className="mt-6 flex gap-3">
                                             <button onClick={() => setStep(1)} className="flex-1 rounded-xl border border-[var(--wide-border)] py-3.5 text-sm font-medium text-[var(--wide-text-secondary)]">
                                                 {t("back")}
                                             </button>
-                                            <button onClick={() => { if (fullName && phone && address1) setStep(3); }} className="flex-1 rounded-xl bg-[var(--wide-neon)] py-3.5 text-sm font-bold text-black disabled:opacity-50" disabled={!fullName || !phone || !address1}>
+                                            <button onClick={() => { if (validate()) setStep(3); }} className="flex-1 rounded-xl bg-[var(--wide-neon)] py-3.5 text-sm font-bold text-black disabled:opacity-50" disabled={!fullName || !phone || !address1 || Object.keys(errors).length > 0}>
                                                 {t("next")}
                                             </button>
                                         </div>
@@ -274,6 +370,10 @@ export default function CheckoutPage() {
                                                 <p>{address1}{address2 && `, ${address2}`}</p>
                                                 <p>{city}</p>
                                                 {notes && <p className="mt-2 italic text-[var(--wide-text-muted)]">{notes}</p>}
+                                            </div>
+                                            <div className="mt-4">
+                                                <span className="text-xs font-medium text-[var(--wide-text-muted)]">{t("shippingMethod")}:</span>
+                                                <p className="text-sm text-[var(--wide-text-primary)] capitalize">{t(shippingMethod)}</p>
                                             </div>
 
                                             <h3 className="flex items-center gap-2 font-semibold text-[var(--wide-text-primary)]">

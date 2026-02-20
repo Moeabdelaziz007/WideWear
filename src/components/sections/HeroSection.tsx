@@ -1,10 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowDown, Sparkles, Play, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const HERO_IMAGES = [
     "/products/IMG_0580.jpg",
@@ -22,6 +23,9 @@ export default function HeroSection() {
     const t = useTranslations();
     const [activeSlide, setActiveSlide] = useState(0);
     const [mounted, setMounted] = useState(false);
+    const { performanceMode } = useTheme();
+    const reduceMotion = useReducedMotion();
+    const disableAnimations = performanceMode || reduceMotion;
 
     useEffect(() => {
         setMounted(true);
@@ -54,10 +58,10 @@ export default function HeroSection() {
                     <motion.div
                         key={activeSlide}
                         className="absolute inset-0"
-                        initial={{ opacity: 0, scale: 1.1 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.5, ease: "easeInOut" }}
+                        initial={disableAnimations ? {} : { opacity: 0, scale: 1.1 }}
+                        animate={disableAnimations ? {} : { opacity: 1, scale: 1 }}
+                        exit={disableAnimations ? {} : { opacity: 0 }}
+                        transition={disableAnimations ? {} : { duration: 1.5, ease: "easeInOut" }}
                     >
                         <Image
                             src={HERO_IMAGES[activeSlide]}
@@ -77,8 +81,8 @@ export default function HeroSection() {
                 {/* Neon scan line effect */}
                 <motion.div
                     className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--wide-neon-glow)] to-transparent opacity-[0.03]"
-                    animate={{ y: ["-100%", "100%"] }}
-                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    animate={disableAnimations ? {} : { y: ["-100%", "100%"] }}
+                    transition={disableAnimations ? {} : { duration: 8, repeat: Infinity, ease: "linear" }}
                     style={{ height: "200%" }}
                 />
 
@@ -95,7 +99,7 @@ export default function HeroSection() {
                 />
 
                 {/* Floating Particles — deterministic for SSR hydration */}
-                {mounted && particles.map((p, i) => (
+                {!disableAnimations && mounted && particles.map((p, i) => (
                     <motion.div
                         key={i}
                         className="absolute rounded-full"

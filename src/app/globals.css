@@ -20,7 +20,7 @@
   /* Text Hierarchy */
   --wide-text-primary: #f5f5f5;
   --wide-text-secondary: #a0a0a0;
-  --wide-text-muted: #666666;
+  --wide-text-muted: #888888; /* lightened for better contrast (WCAG 4.5:1) */
 
   /* Semantic Colors */
   --wide-success: #39ff14;
@@ -32,6 +32,27 @@
   --wide-radius: 12px;
   --wide-radius-sm: 8px;
   --wide-radius-lg: 16px;
+}
+
+/* Light mode overrides */
+.light {
+  --wide-black: #f5f5f5;
+  --wide-dark: #e5e5e5;
+  --wide-surface: #ffffff;
+  --wide-card: #fafafa;
+  --wide-border: #dddddd;
+
+  --wide-text-primary: #0a0a0a;
+  --wide-text-secondary: #333333;
+  --wide-text-muted: #555555;
+}
+
+/* performance mode: disable animations/transitions */
+.no-anim *,
+.no-anim *::before,
+.no-anim *::after {
+  animation: none !important;
+  transition: none !important;
 }
 
 /* ===== Global Reset & Base ===== */

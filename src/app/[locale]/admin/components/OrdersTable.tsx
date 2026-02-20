@@ -10,6 +10,7 @@ type Order = {
     total: number;
     status: string;
     payment_method: string;
+    shipping_method?: string;
     shipping_address: {
         fullName: string;
         city: string;
@@ -83,6 +84,7 @@ export function OrdersTable({ initialOrders, locale }: { initialOrders: Order[];
                                 <th className="px-6 py-4 font-medium">Customer</th>
                                 <th className="px-6 py-4 font-medium">Total</th>
                                 <th className="px-6 py-4 font-medium">Method</th>
+                                <th className="px-6 py-4 font-medium">Shipping</th>
                                 <th className="px-6 py-4 font-medium">Status</th>
                             </tr>
                         </thead>
@@ -116,6 +118,11 @@ export function OrdersTable({ initialOrders, locale }: { initialOrders: Order[];
                                         <td className="px-6 py-4">
                                             <span className="inline-flex rounded-full bg-slate-500/10 px-2.5 py-0.5 text-xs font-semibold text-slate-400 capitalize">
                                                 {order.payment_method}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex rounded-full bg-slate-500/10 px-2.5 py-0.5 text-xs font-semibold text-slate-400 capitalize">
+                                                {order.shipping_method || 'standard'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">

@@ -25,10 +25,16 @@ export async function POST(request: Request) {
 
         // 2. Parse request body
         const body = await request.json();
-        const { fullName, phone, address1, address2, city, notes, paymentMethod } = body;
+        const { fullName, phone, address1, address2, city, notes, paymentMethod, shippingMethod } = body;
 
         if (!fullName || !phone || !address1) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        }
+
+        // shippingMethod is optional but must be a valid choice if provided
+        const validMethods = ["standard", "fast", "pickup"];
+        if (shippingMethod && !validMethods.includes(shippingMethod)) {
+            return NextResponse.json({ error: "Invalid shipping method" }, { status: 400 });
         }
 
         // 3. Fetch cart items with product data
@@ -98,6 +104,7 @@ export async function POST(request: Request) {
                 },
                 phone,
                 payment_method: paymentMethod || "cod",
+                shipping_method: shippingMethod || "standard",
                 notes: notes || null,
             })
             .select("id")
@@ -142,6 +149,7 @@ export async function POST(request: Request) {
                 address: `${address1}${address2 ? `, ${address2}` : ""}, ${city || "Cairo"}`,
                 total,
                 paymentMethod: paymentMethod || "cod",
+                shippingMethod: shippingMethod || "standard",
                 items: orderItems.map((item) => ({
                     name: item.name_ar,
                     size: item.size,

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Star, TrendingUp, Truck, Shield, Zap, Heart, ShoppingBag, Eye } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useWishlist } from "@/components/providers/WishlistProvider";
 import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/components/providers/CartProvider";
 import QuickViewModal from "../shop/QuickViewModal";
@@ -44,8 +45,9 @@ function ProductCard({
   onQuickView: (product: Product) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [addedFeedback, setAddedFeedback] = useState(false);
+  const { has, toggle } = useWishlist();
+  const isLiked = has(product.id);
   const name = locale === "ar" ? product.name_ar : product.name_en;
   const discount = product.sale_price
     ? Math.round(((product.price - product.sale_price) / product.price) * 100)
@@ -66,6 +68,11 @@ function ProductCard({
     setTimeout(() => setAddedFeedback(false), 1500);
   };
 
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toggle(product.id);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
@@ -83,10 +90,10 @@ function ProductCard({
           src={product.images?.[0] ?? "/products/IMG_0575.jpg"}
           alt={name}
           fill
+          loading="lazy"
           className={`object-cover transition-opacity duration-500 ${isHovered && (product.video_url || product.images?.length > 1) ? 'opacity-0' : 'opacity-100 group-hover:scale-105'}`}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
-
         {/* Video / Secondary Image on Hover */}
         {product.video_url ? (
           <video
@@ -102,6 +109,7 @@ function ProductCard({
             src={product.images[1]}
             alt={`${name} secondary view`}
             fill
+            loading="lazy"
             className={`absolute inset-0 object-cover transition-transform duration-700 ${isHovered ? 'opacity-100 scale-105' : 'opacity-0'}`}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
@@ -143,8 +151,10 @@ function ProductCard({
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setIsLiked(!isLiked)}
+            onClick={handleWishlist}
             title={locale === "ar" ? "أضف للمفضلة" : "Add to wishlist"}
+            aria-label={locale === "ar" ? "أضف/إزالة من المفضلة" : "Add/remove from wishlist"}
+            role="button"
             className={`flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-all ${isLiked
               ? "bg-[var(--wide-error)] text-white"
               : "bg-white/10 text-white hover:bg-white/20"
