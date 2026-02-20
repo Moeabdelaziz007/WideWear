@@ -32,8 +32,9 @@ test.describe('Checkout Flow', () => {
         await page.goto('/ar/checkout');
 
         // Step 4: Verify it redirects to /auth because user is not logged in!
-        // The page.tsx has `if (!user) { router.push('/[locale]/auth'); }`
-        await page.waitForURL('**/ar/auth');
+        // The page.tsx has `useEffect(() => { if (!user) router.push('/[locale]/auth'); }, ...)`
+        // Playwright needs to wait longer for NextJS client-side hydration before the redirect occurs.
+        await page.waitForURL('**/ar/auth', { timeout: 15000 });
         await expect(page.locator('h1')).toBeVisible();
 
         // Note: Full E2E testing of the actual Fawry API and Supabase Auth 

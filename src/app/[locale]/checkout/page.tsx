@@ -19,7 +19,7 @@ export default function CheckoutPage() {
     const locale = useLocale();
     const router = useRouter();
     const isRTL = locale === "ar";
-    const { items, total, user, updateQuantity, removeItem } = useCart();
+    const { items, total, user, updateQuantity, removeItem, isLoading: cartLoading } = useCart();
 
     const [step, setStep] = useState<Step>(1);
     const [loading, setLoading] = useState(false);
@@ -71,10 +71,10 @@ export default function CheckoutPage() {
         saveState();
     }, [fullName, phone, address1, address2, city, notes, paymentMethod, shippingMethod, step]);
 
-    const [errors, setErrors] = useState<{[key:string]: string}>({});
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     const validate = () => {
-        const errs: {[key:string]: string} = {};
+        const errs: { [key: string]: string } = {};
         if (!fullName.trim()) errs.fullName = t("required");
         if (!address1.trim()) errs.address1 = t("required");
         const phonePattern = /^01[0-9]{9}$/; // simple Egyptian mobile
@@ -83,12 +83,7 @@ export default function CheckoutPage() {
         return Object.keys(errs).length === 0;
     };
 
-    // Redirect if not logged in
-    useEffect(() => {
-        if (!user) {
-            router.push(`/${locale}/auth`);
-        }
-    }, [user, router, locale]);
+    // Removed aggressive redirect here, we handle it via Auth Wall UI
 
     // Pre-fill from profile
     useEffect(() => {
@@ -180,6 +175,35 @@ export default function CheckoutPage() {
                             {tc("continueShopping")}
                         </a>
                     </div>
+                </div>
+            </>
+        );
+    }
+
+    // AUTH WALL: If not logged in and not loading, show Auth/Guest options
+    if (!user && !cartLoading) {
+        return (
+            <>
+                <Navbar />
+                <div className="flex min-h-screen items-center justify-center bg-[var(--wide-bg-primary)] px-4 pt-16">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-8 rounded-2xl border border-[var(--wide-border)] bg-[var(--wide-bg-secondary)] p-8 shadow-2xl">
+                        <div className="text-center">
+                            <h2 className="text-2xl font-black text-[var(--wide-text-primary)]">
+                                {isRTL ? "تسجيل الدخول للمتابعة" : "Login to Checkout"}
+                            </h2>
+                            <p className="mt-2 text-sm text-[var(--wide-text-muted)]">
+                                {isRTL ? "سجل دخولك لحفظ طلباتك أو يمكنك المتابعة كزائر سريع." : "Login to save your orders, or continue with quick guest checkout."}
+                            </p>
+                        </div>
+                        <div className="space-y-4">
+                            <button onClick={() => router.push(`/${locale}/auth?redirect=/checkout`)} className="w-full rounded-xl bg-[var(--wide-neon)] py-3.5 text-sm font-bold text-black transition-transform active:scale-95">
+                                {isRTL ? "تسجيل الدخول / إنشاء حساب" : "Log In / Sign Up"}
+                            </button>
+                            <button onClick={() => router.push(`/${locale}/auth/guest`)} className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 text-sm font-bold text-white transition-all hover:border-[var(--wide-neon)]/50 hover:text-[var(--wide-neon)] active:scale-95">
+                                {isRTL ? "المتابعة كزائر" : "Continue as Guest"}
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
             </>
         );

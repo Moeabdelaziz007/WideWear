@@ -4,6 +4,7 @@ import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { WishlistProvider } from "@/components/providers/WishlistProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import SpeedDial from "@/components/ui/SpeedDial";
 import { Inter, Oswald, Noto_Sans_Arabic } from "next/font/google";
 import "../globals.css";
@@ -36,14 +37,16 @@ export default async function LocaleLayout({
             </head>
             <body className="antialiased font-sans">
                 <NextIntlClientProvider locale={locale} messages={messages}>
-                    <ThemeProvider>
-                        <CartProvider>
-                            <WishlistProvider>
-                                <SpeedDial />
-                                {children}
-                            </WishlistProvider>
-                        </CartProvider>
-                    </ThemeProvider>
+                    <SmoothScrollProvider>
+                        <ThemeProvider>
+                            <CartProvider>
+                                <WishlistProvider>
+                                    <SpeedDial />
+                                    {children}
+                                </WishlistProvider>
+                            </CartProvider>
+                        </ThemeProvider>
+                    </SmoothScrollProvider>
                 </NextIntlClientProvider>
             </body>
         </html >

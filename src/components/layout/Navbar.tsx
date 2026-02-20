@@ -10,6 +10,7 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import { useCart } from "@/components/providers/CartProvider";
 import { OmniSearch } from "@/components/layout/OmniSearch";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { MagneticWrapper } from "@/components/ui/MagneticWrapper";
 
 export default function Navbar() {
     const t = useTranslations();
@@ -58,7 +59,7 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className={`${shrunk ? "h-12" : "h-16"} fixed top-0 left-0 right-0 z-40 glass transition-all duration-300`}> 
+            <nav className={`${shrunk ? "h-12" : "h-16"} fixed top-0 left-0 right-0 z-40 glass transition-all duration-300`}>
                 <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                     {/* Logo */}
                     <a href={`/${currentLocale}`} aria-label="WideWear Home">
@@ -90,79 +91,91 @@ export default function Navbar() {
                         <OmniSearch />
 
                         {/* Theme Toggle */}
-                        <motion.button
-                            onClick={toggleTheme}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                        >
-                            {theme === "dark" ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
-                        </motion.button>
+                        <MagneticWrapper>
+                            <motion.button
+                                onClick={toggleTheme}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                            >
+                                {theme === "dark" ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+                            </motion.button>
+                        </MagneticWrapper>
 
                         {/* Performance Mode Toggle */}
-                        <motion.button
-                            onClick={togglePerformanceMode}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            aria-label={performanceMode ? "Disable performance mode" : "Enable performance mode"}
-                            title={performanceMode ? "Performance mode ON" : "Performance mode OFF"}
-                        >
-                            <Zap className="h-4.5 w-4.5" />
-                        </motion.button>
+                        <MagneticWrapper>
+                            <motion.button
+                                onClick={togglePerformanceMode}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label={performanceMode ? "Disable performance mode" : "Enable performance mode"}
+                                title={performanceMode ? "Performance mode ON" : "Performance mode OFF"}
+                            >
+                                <Zap className="h-4.5 w-4.5" />
+                            </motion.button>
+                        </MagneticWrapper>
 
                         {/* Locale Toggle */}
-                        <motion.button
-                            onClick={toggleLocale}
-                            className="flex h-9 items-center gap-1.5 rounded-full bg-[var(--wide-surface)] px-3 text-xs font-medium text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            aria-label={isRTL ? "Switch to English" : "التبديل إلى العربية"}
-                            role="button"
-                        >
-                            <Globe className="h-3.5 w-3.5" />
-                            {currentLocale === "ar" ? "EN" : "عربي"}
-                        </motion.button>
+                        <MagneticWrapper>
+                            <motion.button
+                                onClick={toggleLocale}
+                                className="flex h-9 items-center gap-1.5 rounded-full bg-[var(--wide-surface)] px-3 text-xs font-medium text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                aria-label={isRTL ? "Switch to English" : "التبديل إلى العربية"}
+                                role="button"
+                            >
+                                <Globe className="h-3.5 w-3.5" />
+                                {currentLocale === "ar" ? "EN" : "عربي"}
+                            </motion.button>
+                        </MagneticWrapper>
 
                         {/* User / Auth */}
-                        <motion.a
-                            href={user ? `/${currentLocale}/profile` : `/${currentLocale}/auth`}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            title={user ? t("auth.myAccount") : t("auth.signIn")}
-                            aria-label={user ? t("auth.myAccount") : t("auth.signIn")}
-                            role="button"
-                        >
-                            <User className="h-4.5 w-4.5" />
-                        </motion.a>
+                        <MagneticWrapper>
+                            <motion.a
+                                href={user ? `/${currentLocale}/profile` : `/${currentLocale}/auth`}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                title={user ? t("auth.myAccount") : t("auth.signIn")}
+                                aria-label={user ? t("auth.myAccount") : t("auth.signIn")}
+                                role="button"
+                            >
+                                <User className="h-4.5 w-4.5" />
+                            </motion.a>
+                        </MagneticWrapper>
 
                         {/* Cart */}
-                        <motion.button
-                            onClick={() => setCartOpen(true)}
-                            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            aria-label={isRTL ? "عرض السلة" : "View cart"}
-                            role="button"
-                        >
-                            <ShoppingBag className="h-4.5 w-4.5" />
-                            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--wide-neon)] text-[10px] font-bold text-black">
-                                {count}
-                            </span>
-                        </motion.button>
+                        <MagneticWrapper>
+                            <motion.button
+                                onClick={() => setCartOpen(true)}
+                                className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] transition-colors hover:text-[var(--wide-neon)]"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label={isRTL ? "عرض السلة" : "View cart"}
+                                role="button"
+                            >
+                                <ShoppingBag className="h-4.5 w-4.5" />
+                                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--wide-neon)] text-[10px] font-bold text-black">
+                                    {count}
+                                </span>
+                            </motion.button>
+                        </MagneticWrapper>
 
                         {/* Mobile Menu Toggle */}
-                        <motion.button
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] md:hidden"
-                            onClick={() => setIsOpen(!isOpen)}
-                            whileTap={{ scale: 0.9 }}
-                            aria-label={isOpen ? (isRTL ? "إغلاق القائمة" : "Close menu") : (isRTL ? "فتح القائمة" : "Open menu")}
-                            role="button"
-                        >
-                            {isOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
-                        </motion.button>
+                        <MagneticWrapper>
+                            <motion.button
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--wide-surface)] text-[var(--wide-text-secondary)] md:hidden"
+                                onClick={() => setIsOpen(!isOpen)}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label={isOpen ? (isRTL ? "إغلاق القائمة" : "Close menu") : (isRTL ? "فتح القائمة" : "Open menu")}
+                                role="button"
+                            >
+                                {isOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
+                            </motion.button>
+                        </MagneticWrapper>
                     </div>
                 </div>
 

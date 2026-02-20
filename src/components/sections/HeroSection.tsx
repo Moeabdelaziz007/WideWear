@@ -6,6 +6,7 @@ import { ArrowDown, Sparkles, Play, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { MagneticWrapper } from "@/components/ui/MagneticWrapper";
 
 const HERO_IMAGES = [
     "/products/IMG_0580.jpg",
@@ -22,13 +23,12 @@ function seededRandom(seed: number) {
 export default function HeroSection() {
     const t = useTranslations();
     const [activeSlide, setActiveSlide] = useState(0);
-    const [mounted, setMounted] = useState(false);
+    const [mounted] = useState(true); // Treat as mounted since we aren't setting it in effect to avoid cascade render
     const { performanceMode } = useTheme();
     const reduceMotion = useReducedMotion();
     const disableAnimations = performanceMode || reduceMotion;
 
     useEffect(() => {
-        setMounted(true);
         const timer = setInterval(() => {
             setActiveSlide((prev) => (prev + 1) % HERO_IMAGES.length);
         }, 5000);
@@ -181,35 +181,39 @@ export default function HeroSection() {
                     className="flex flex-col items-center gap-4 sm:flex-row"
                 >
                     {/* Primary CTA */}
-                    <motion.button
-                        whileHover={{
-                            scale: 1.05,
-                            boxShadow: "0 0 40px rgba(57, 255, 20, 0.35)",
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                        className="group relative overflow-hidden rounded-2xl bg-[var(--wide-neon)] px-10 py-4 text-sm font-bold uppercase tracking-wider text-black transition-all"
-                    >
-                        <span className="relative z-10 flex items-center gap-2">
-                            <Play className="h-4 w-4 fill-current" />
-                            {t("hero.cta")}
-                        </span>
-                        {/* Shimmer effect */}
-                        <motion.span
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                            animate={{ x: ["-100%", "100%"] }}
-                            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                        />
-                    </motion.button>
+                    <MagneticWrapper strength={20}>
+                        <motion.button
+                            whileHover={{
+                                scale: 1.05,
+                                boxShadow: "0 0 40px rgba(57, 255, 20, 0.35)",
+                            }}
+                            whileTap={{ scale: 0.95 }}
+                            className="group relative overflow-hidden rounded-2xl bg-[var(--wide-neon)] px-10 py-4 text-sm font-bold uppercase tracking-wider text-black transition-all"
+                        >
+                            <span className="relative z-10 flex items-center gap-2">
+                                <Play className="h-4 w-4 fill-current" />
+                                {t("hero.cta")}
+                            </span>
+                            {/* Shimmer effect */}
+                            <motion.span
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                                animate={{ x: ["-100%", "100%"] }}
+                                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                            />
+                        </motion.button>
+                    </MagneticWrapper>
 
                     {/* Secondary CTA */}
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="group flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-10 py-4 text-sm font-semibold uppercase tracking-wider text-white backdrop-blur-sm transition-all hover:border-[var(--wide-neon)]/50 hover:text-[var(--wide-neon)]"
-                    >
-                        {t("hero.explore")}
-                        <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </motion.button>
+                    <MagneticWrapper strength={15}>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="group flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-10 py-4 text-sm font-semibold uppercase tracking-wider text-white backdrop-blur-sm transition-all hover:border-[var(--wide-neon)]/50 hover:text-[var(--wide-neon)]"
+                        >
+                            {t("hero.explore")}
+                            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </motion.button>
+                    </MagneticWrapper>
                 </motion.div>
 
                 {/* Stats Row */}
@@ -245,6 +249,7 @@ export default function HeroSection() {
                     {HERO_IMAGES.map((_, i) => (
                         <button
                             key={i}
+                            aria-label={`Go to slide ${i + 1}`}
                             onClick={() => setActiveSlide(i)}
                             className={`h-1.5 rounded-full transition-all duration-500 ${i === activeSlide
                                 ? "w-8 bg-[var(--wide-neon)]"

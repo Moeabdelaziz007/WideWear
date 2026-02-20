@@ -1,7 +1,7 @@
 <div align="center">
 
-<!-- Animated SVG Banner -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0a0a0a,50:39ff14,100:0a0a0a&height=220&section=header&text=WIDE%20Wear&fontSize=80&fontColor=39ff14&animation=fadeIn&fontAlignY=35&desc=Zero%20Friction.%20Maximum%20Style.&descSize=20&descAlignY=55&descColor=a0a0a0" width="100%" alt="WideWear Banner"/>
+<!-- Hero Banner Image -->
+<img src="/public/products/widewear_landing_ui_1771613814507.png" width="100%" alt="WideWear Platform UI Banner" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 0 30px rgba(57, 255, 20, 0.4);"/>
 
 <!-- Badges Row 1: Tech Stack -->
 [![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
@@ -252,8 +252,10 @@ graph TB
 - **Cart UX upgrades**: quantity can be entered directly, operations show temporary confirmation toast, and drawer auto‑closes after inactivity.
 
 > **تحديثات بالعربي:**
+>
 > - **خيارات الشحن**: يمكن للعملاء اختيار الشحن العادي أو السريع أو الاستلام. يتم حفظ التفضيل محلياً، ويتم إرساله مع الطلب ويظهر في ملخص الطلب ولوحة الإدارة.
 > - **الوضع الليلي/الفاتح ووضع الأداء**: يمكن تبديل الألوان بين الفاتحة والداكنة؛ ويوجد خيار "وضع الأداء" لإيقاف الأنيميشن وتقليل الحركة على الأجهزة الضعيفة. التفضيلات محفوظة عبر الجلسات.
+>
 - **Performance improvements roadmap**: animations are now optional, and future iterations will optimize image dimensions, consider sprites, audit with Lighthouse to boost PWA/SSR scores and optionally disable heavy visual effects like hero particles on low‑end devices.
 
 </details>
