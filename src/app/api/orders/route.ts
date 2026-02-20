@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendOrderNotification, formatOrderNotification } from "@/lib/notifications";
+import { CreateOrderSchema } from "@/lib/validations";
+// Optional: import { Redis } from "@upstash/redis"; 
+// if we implement Phase 2 Idempotency right now. For now we just prepare the structure and use Zod & RPC.
 
 /**
  * POST /api/orders
- * Creates a new order with server-side validation.
- * - Validates user session
- * - Validates cart items exist and products are in stock
- * - Calculates total server-side (prevents price manipulation)
- * - Creates order + order items
- * - Decrements product stock
- * - Clears cart
- * - Sends Telegram notification
+ * Creates a new order with strict validation (Zod) and Atomic RPC checkout.
  */
 export async function POST(request: Request) {
     try {
@@ -23,210 +19,122 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // 2. Parse request body
-        const body = await request.json();
-        const { fullName, phone, address1, address2, city, notes, paymentMethod, shippingMethod } = body;
-
-        if (!fullName || !phone || !address1) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        // 2. Parse and Validate request body using Zod
+        let body;
+        try {
+            body = await request.json();
+        } catch {
+            return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
         }
 
-        // shippingMethod is optional but must be a valid choice if provided
-        const validMethods = ["standard", "fast", "pickup"];
-        if (shippingMethod && !validMethods.includes(shippingMethod)) {
-            return NextResponse.json({ error: "Invalid shipping method" }, { status: 400 });
+        const parseResult = CreateOrderSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: "Validation failed", details: parseResult.error.format() },
+                { status: 400 }
+            );
         }
 
-        // 3. Fetch cart items with product data
-        const { data: cartItems, error: cartError } = await supabase
-            .from("cart_items")
-            .select(`
-                id, product_id, size, color, quantity,
-                product:products(id, name_ar, name_en, price, sale_price, stock, images)
-            `)
-            .eq("user_id", user.id);
+        const data = parseResult.data;
 
-        if (cartError || !cartItems || cartItems.length === 0) {
-            return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+        // Note: Phase 2 Idempotency check using Upstash Redis would go here using an Idempotency-Key header.
+
+        // 3. Execute Atomic Checkout via RPC
+        const { data: orderId, error: rpcError } = await supabase.rpc("checkout_order", {
+            p_user_id: user.id,
+            p_shipping_address: data.shippingAddress,
+            p_phone: data.phone,
+            p_payment_method: data.paymentMethod,
+            p_shipping_method: data.shippingMethod,
+            p_notes: data.notes || null,
+        });
+
+        if (rpcError || !orderId) {
+            console.error("[RPC Error]", rpcError);
+            return NextResponse.json(
+                { error: "Order process failed", details: rpcError?.message },
+                { status: 400 } // Often 400 because it fails if cart empty or out of stock
+            );
         }
 
-        // 4. Validate stock + calculate total server-side
-        let total = 0;
-        const orderItems: {
-            product_id: string;
-            name_ar: string;
-            name_en: string;
-            price: number;
-            size: string;
-            color: string | null;
-            quantity: number;
-            image_url: string | null;
-        }[] = [];
-
-        for (const item of cartItems) {
-            const product = Array.isArray(item.product) ? item.product[0] : item.product;
-            if (!product) continue;
-
-            if (product.stock < item.quantity) {
-                return NextResponse.json(
-                    { error: `${product.name_en} is out of stock` },
-                    { status: 400 }
-                );
-            }
-
-            const unitPrice = product.sale_price ?? product.price;
-            total += unitPrice * item.quantity;
-
-            orderItems.push({
-                product_id: product.id,
-                name_ar: product.name_ar,
-                name_en: product.name_en,
-                price: unitPrice,
-                size: item.size,
-                color: item.color,
-                quantity: item.quantity,
-                image_url: product.images?.[0] ?? null,
-            });
-        }
-
-        // 5. Create order
-        const { data: order, error: orderError } = await supabase
+        // 4. Fetch the created order details for notification & fawry
+        const { data: orderData } = await supabase
             .from("orders")
-            .insert({
-                user_id: user.id,
-                status: "pending",
-                total,
-                shipping_address: {
-                    fullName,
-                    address1,
-                    address2: address2 || null,
-                    city: city || "Cairo",
-                },
-                phone,
-                payment_method: paymentMethod || "cod",
-                shipping_method: shippingMethod || "standard",
-                notes: notes || null,
-            })
-            .select("id")
-            .single();
+            .select("total, order_items(name_en, size, quantity, price)")
+            .eq("id", orderId)
+            .single<{ total: number; order_items: { name_en: string; size: string; quantity: number; price: number }[] }>();
 
-        if (orderError || !order) {
-            return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+        // 5. Send Unified Notification
+        if (orderData) {
+            await sendOrderNotification(
+                formatOrderNotification({
+                    id: orderId,
+                    customerName: data.shippingAddress.fullName,
+                    phone: data.phone,
+                    address: `${data.shippingAddress.addressLine1}${data.shippingAddress.addressLine2 ? ', ' + data.shippingAddress.addressLine2 : ''}, ${data.shippingAddress.city}`,
+                    total: orderData.total,
+                    paymentMethod: data.paymentMethod,
+                    shippingMethod: data.shippingMethod,
+                    items: orderData.order_items.map((item: any) => ({
+                        name: item.name_en,
+                        size: item.size,
+                        quantity: item.quantity,
+                    })),
+                }),
+                ['telegram']
+            );
         }
 
-        // 6. Create order items
-        const { error: itemsError } = await supabase
-            .from("order_items")
-            .insert(orderItems.map((item) => ({ ...item, order_id: order.id })));
-
-        if (itemsError) {
-            // Rollback: delete the order
-            await supabase.from("orders").delete().eq("id", order.id);
-            return NextResponse.json({ error: "Failed to create order items" }, { status: 500 });
-        }
-
-        // 7. Decrement stock
-        for (const item of orderItems) {
-            try {
-                await supabase.rpc("decrement_stock", {
-                    p_product_id: item.product_id,
-                    p_quantity: item.quantity,
-                });
-            } catch {
-                // If RPC doesn't exist, stock will be managed via admin dashboard
-            }
-        }
-
-        // 8. Clear cart
-        await supabase.from("cart_items").delete().eq("user_id", user.id);
-
-        // 9. Send Unified Notification (Telegram, WhatsApp, etc)
-        await sendOrderNotification(
-            formatOrderNotification({
-                id: order.id,
-                customerName: fullName,
-                phone,
-                address: `${address1}${address2 ? `, ${address2}` : ""}, ${city || "Cairo"}`,
-                total,
-                paymentMethod: paymentMethod || "cod",
-                shippingMethod: shippingMethod || "standard",
-                items: orderItems.map((item) => ({
-                    name: item.name_ar,
-                    size: item.size,
-                    quantity: item.quantity,
-                })),
-            }),
-            ['telegram'] // Defaulting to Telegram for now until Meta API keys are active
-        );
-
-        // 10. Update user profile with latest shipping info
-        await supabase
+        // 6. Update user profile with latest shipping info async
+        supabase
             .from("profiles")
             .update({
-                full_name: fullName,
-                phone,
-                address_line1: address1,
-                address_line2: address2 || null,
-                city: city || "Cairo",
+                full_name: data.shippingAddress.fullName,
+                phone: data.phone,
+                address_line1: data.shippingAddress.addressLine1,
+                address_line2: data.shippingAddress.addressLine2 || null,
+                city: data.shippingAddress.city,
             })
-            .eq("id", user.id);
+            .eq("id", user.id)
+            .then(); // fire and forget
 
-        if (paymentMethod === "fawry") {
+        // 7. Payment Gateway Routing
+        if (data.paymentMethod === "fawry" && orderData) {
             try {
-                // Dynamically import to avoid edge runtime issues if crypto restricts
                 const { buildChargePayload, FAWRY_API_URL } = await import("@/lib/fawry");
-
-                const returnUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/en/checkout/success?orderId=${order.id}`;
+                const returnUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/en/checkout/success?orderId=${orderId}`;
 
                 const payload = buildChargePayload({
-                    merchantRefNum: order.id,
+                    merchantRefNum: orderId,
                     customerProfileId: user.id,
-                    customerName: fullName,
-                    customerMobile: phone,
+                    customerName: data.shippingAddress.fullName,
+                    customerMobile: data.phone,
                     customerEmail: user.email || 'customer@widewear.com',
-                    amount: total,
+                    amount: orderData.total,
                     currencyCode: "EGP",
                     returnUrl: returnUrl,
-                    chargeItems: orderItems.map(item => ({
-                        itemId: item.product_id,
+                    chargeItems: orderData.order_items.map((item: any) => ({
+                        itemId: item.name_en, // ideally product ID but name is fine for Fawry UI
                         description: item.name_en,
                         price: item.price,
                         quantity: item.quantity
                     }))
                 });
 
-                // In a production scenario, you might send this to FAWRY_API_URL.
-                // For this implementation, we will mock the Fawry URL redirection or use their test UI
-                // The Fawry Hosted Checkout URL format:
-                // const fawryUrl = `https://atfawry.fawrystaging.com/ECommercePlugin/FawryPay.jsp?chargeRequest=${encodeURIComponent(JSON.stringify(payload))}`;
-
-                // Actually doing the S2S charge request to get a reference number
-                const fawryRes = await fetch(FAWRY_API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                const fawryData = await fawryRes.text();
-                console.log("[Fawry API Response]", fawryData);
-
-                // If S2S fails or we strictly want Hosted Checkout, we can just return the hosted URL
-                // Let's pass the hosted Checkout URL directly
                 const hostedCheckoutUrl = `https://atfawry.fawrystaging.com/ECommercePlugin/FawryPay.jsp?chargeRequest=${encodeURIComponent(JSON.stringify(payload))}`;
 
                 return NextResponse.json({
-                    orderId: order.id,
-                    fawryUrl: hostedCheckoutUrl // Frontend will redirect here
+                    orderId: orderId,
+                    fawryUrl: hostedCheckoutUrl
                 }, { status: 201 });
 
             } catch (err) {
                 console.error("Fawry Generation Error:", err);
-                // Fallback to success page without fawry redirect
-                return NextResponse.json({ orderId: order.id }, { status: 201 });
+                return NextResponse.json({ orderId: orderId }, { status: 201 });
             }
         }
 
-        return NextResponse.json({ orderId: order.id }, { status: 201 });
+        return NextResponse.json({ orderId: orderId }, { status: 201 });
     } catch (error) {
         console.error("[Orders API] Error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
