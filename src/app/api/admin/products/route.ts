@@ -1,5 +1,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { Redis } from "@upstash/redis";
+
+const redis =
+    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+        ? Redis.fromEnv()
+        : null;
+
+async function invalidateProductsCache() {
+    if (redis) {
+        try {
+            await redis.del("cache:products:featured:8");
+            console.log("[Admin] Cache Invalidated: cache:products:featured:8");
+        } catch (err) {
+            console.error("[Admin] Redis DEL Error:", err);
+        }
+    }
+}
 
 /**
  * POST - Create a new product (Admin only)
@@ -22,6 +39,8 @@ export async function POST(request: Request) {
             .single();
 
         if (error) throw error;
+
+        await invalidateProductsCache();
 
         return NextResponse.json({ product }, { status: 201 });
     } catch (error: any) {
@@ -57,6 +76,8 @@ export async function PATCH(request: Request) {
             .single();
 
         if (error) throw error;
+
+        await invalidateProductsCache();
 
         return NextResponse.json({ product }, { status: 200 });
     } catch (error: any) {

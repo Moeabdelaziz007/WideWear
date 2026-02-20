@@ -259,16 +259,17 @@ export default function FeaturedProducts() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(8);
-
-      if (data) setProducts(data as Product[]);
-      setLoading(false);
+      try {
+        const res = await fetch("/api/products?limit=8");
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data as Product[]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchProducts();
   }, []);

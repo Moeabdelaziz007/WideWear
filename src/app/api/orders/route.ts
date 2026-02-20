@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendOrderNotification, formatOrderNotification } from "@/lib/notifications";
 import { CreateOrderSchema } from "@/lib/validations";
-// Optional: import { Redis } from "@upstash/redis"; 
-// if we implement Phase 2 Idempotency right now. For now we just prepare the structure and use Zod & RPC.
+import { Redis } from "@upstash/redis";
+
+// Initialize Upstash Redis safely
+const redis =
+    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+        ? Redis.fromEnv()
+        : null;
 
 /**
  * POST /api/orders
@@ -37,7 +42,20 @@ export async function POST(request: Request) {
 
         const data = parseResult.data;
 
-        // Note: Phase 2 Idempotency check using Upstash Redis would go here using an Idempotency-Key header.
+        // Phase 2: Idempotency check
+        const idempotencyKey = request.headers.get("Idempotency-Key");
+        if (idempotencyKey && redis) {
+            try {
+                const cachedResponse = await redis.get(`idem:${user.id}:${idempotencyKey}`);
+                if (cachedResponse) {
+                    console.log("[Idempotency] Returning cached response for key:", idempotencyKey);
+                    return NextResponse.json(cachedResponse, { status: 201 });
+                }
+            } catch (err) {
+                console.error("[Idempotency] Redis GET error:", err);
+                // Fail open to allow transaction natively if Redis errors
+            }
+        }
 
         // 3. Execute Atomic Checkout via RPC
         const { data: orderId, error: rpcError } = await supabase.rpc("checkout_order", {
@@ -98,10 +116,12 @@ export async function POST(request: Request) {
             .eq("id", user.id)
             .then(); // fire and forget
 
-        // 7. Payment Gateway Routing
+        // 7. Payment Gateway Routing & Idempotency Cache
+        const finalResponse: { orderId: string; fawryUrl?: string } = { orderId: orderId };
+
         if (data.paymentMethod === "fawry" && orderData) {
             try {
-                const { buildChargePayload, FAWRY_API_URL } = await import("@/lib/fawry");
+                const { buildChargePayload } = await import("@/lib/fawry");
                 const returnUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/en/checkout/success?orderId=${orderId}`;
 
                 const payload = buildChargePayload({
@@ -113,7 +133,7 @@ export async function POST(request: Request) {
                     amount: orderData.total,
                     currencyCode: "EGP",
                     returnUrl: returnUrl,
-                    chargeItems: orderData.order_items.map((item: any) => ({
+                    chargeItems: orderData.order_items.map((item: { name_en: string; price: number; quantity: number; size: string }) => ({
                         itemId: item.name_en, // ideally product ID but name is fine for Fawry UI
                         description: item.name_en,
                         price: item.price,
@@ -122,19 +142,23 @@ export async function POST(request: Request) {
                 });
 
                 const hostedCheckoutUrl = `https://atfawry.fawrystaging.com/ECommercePlugin/FawryPay.jsp?chargeRequest=${encodeURIComponent(JSON.stringify(payload))}`;
-
-                return NextResponse.json({
-                    orderId: orderId,
-                    fawryUrl: hostedCheckoutUrl
-                }, { status: 201 });
+                finalResponse.fawryUrl = hostedCheckoutUrl;
 
             } catch (err) {
                 console.error("Fawry Generation Error:", err);
-                return NextResponse.json({ orderId: orderId }, { status: 201 });
             }
         }
 
-        return NextResponse.json({ orderId: orderId }, { status: 201 });
+        // Cache the successful response for 24 hours
+        if (idempotencyKey && redis) {
+            try {
+                await redis.set(`idem:${user.id}:${idempotencyKey}`, finalResponse, { ex: 86400 });
+            } catch (err) {
+                console.error("[Idempotency] Redis SET error:", err);
+            }
+        }
+
+        return NextResponse.json(finalResponse, { status: 201 });
     } catch (error) {
         console.error("[Orders API] Error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
